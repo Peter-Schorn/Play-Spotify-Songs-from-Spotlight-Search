@@ -12,11 +12,13 @@ playlist            = '2z212MPinIr8HesnJ68UoF'
 
 # This is where you specify the folder in which the songs will be stored
 # TODO: **DO NOT** add a forward slash at the very end of the folder path
-folder_location     = '/Users/pschorn/TempSongs'
-username            = 'petervschorn'
+folder_location     = '/Users/myusername/Songs'
 
-client_id           = os.environ.get('CLIENT_ID')
-client_secret       = os.environ.get('CLIENT_SECRET')
+# This is where you enter the username you use to log in to spotify
+username            = 'myusername'
+
+client_id           = 'enter client id here'
+client_secret       = 'enter client secret here'
 redirect_uri        = 'http://localhost/'
 scope               = 'user-library-read'
 
@@ -87,7 +89,7 @@ def download_tracks(tracks):
         ################################################################
 
       # A list of all the albums and artists in the playlist
-      # is maintained for future reference (see lines 263-300).
+      # is maintained for future reference (see lines 265-302).
         if not AlbumURI in PlaylistAlbumsList:
             PlaylistAlbumsList.append(AlbumURI)
 
@@ -114,7 +116,7 @@ def download_tracks(tracks):
             myName      = TheSong
 
       # Creates a list of all the songs in the playlist.
-      # This will later be compared with all of the downloaded songs (see lines 263-300).
+      # This will later be compared with all of the downloaded songs (see lines 265-302).
         SongsInPlaylist.append(myName)
 
         ################################################################

@@ -2,7 +2,7 @@
 This python script will retrieve all the songs in one of your spotify playlists. For each song, it will make an application named after the song which you can click to play the song in spotify. The purpose of this is so that you can search for the song in spotlight search and then press enter to play the song!
 
 
-![Alt Text](https://giphy.com/gifs/lOaGq1DLegIvs7ZBOr/html5)
+![Alt Text](https://media.giphy.com/media/lOaGq1DLegIvs7ZBOr/giphy.gif)
 
 
 

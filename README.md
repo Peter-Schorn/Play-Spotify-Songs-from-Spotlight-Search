@@ -33,7 +33,10 @@ The URI will look something like this:
 ```
 spotify:playlist:2z212MPinIr8HesnJ68UoF
 ```
-Remove `spotify:playlist:` from the beginning so that you have something like `2z212MPinIr8HesnJ68UoF`.
+Remove `spotify:playlist:` from the beginning so that you have something like
+```
+2z212MPinIr8HesnJ68UoF
+```
 
 Now, open the script and paste the URI into the appropriate location in line 11 of the code, as shown below. Ensure that the URI is enclosed in quotation marks!
 ```

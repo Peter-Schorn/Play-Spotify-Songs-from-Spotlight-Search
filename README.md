@@ -8,8 +8,7 @@ This script requires the spotify desktop applicaiton. If you'd like to play song
 
 The song will be played in the context of the album that it belongs too. If, instead, you want the song to play in the context of a playlist or the artist it belongs to, let me know and I'll show you how to change the code. 
 
-
-Album cover art will be downloaded and be set as the icon for the corresponding songs and album folder. An image for the artist will also be downloaded and set for each artist folder.
+The songs will be sorted into folders based on the artist and album they belong to. Album cover art will be downloaded and set as the icon for the corresponding songs and for the album folders. An image for the artist will also be downloaded and set for each artist folder.
 
 To use this script, you must have the spotipy (yes, that's with a "p", not an "f") library installed, which can be found [here](https://github.com/plamere/spotipy).
 Also, download the request module from [here](https://github.com/andrewp-as-is/request.py). This module is used to download artist and album images from spotify. You must also download fileicon, a command-line utility which sets a custom icon for files and directories. It can be found [here](https://github.com/mklement0/fileicon).

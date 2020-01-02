@@ -2,7 +2,7 @@
 This python script will retrieve all the songs in one of your spotify playlists. For each song, it will make an application named after the song which you can click to play the song in spotify. The purpose of this is so that you can search for the song in spotlight search and then press enter to play the song!
 
 
-
+![Alt Text](https://media.giphy.com/media/vFKqnCdLPNOKc/giphy.gif)
 
 
 
@@ -21,12 +21,12 @@ Also, download the request module from [here](https://github.com/andrewp-as-is/r
 
 Then, visit
 
-[https://developer.spotify.com/dashboard/](https://developer.spotify.com/dashboard/) 
+![https://developer.spotify.com/dashboard/](https://developer.spotify.com/dashboard/) 
 
 and login with your spotify account. Next, click `create client id`.  Enter any name or description and below `What are you building`, select `I don't know`. You will be provided with a Client ID and a Client Secret. Click on edit settings, and set 
-
+```
 http://localhost/
-
+```
 as the Redirect URI. Make sure to save your changes at the bottom.
 
 

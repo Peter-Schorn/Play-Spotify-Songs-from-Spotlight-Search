@@ -4,6 +4,7 @@ This python script will retrieve all the songs in one of your spotify playlists.
 
 ![Alt Text](https://media.giphy.com/media/lOaGq1DLegIvs7ZBOr/giphy.gif)
 
+<a href="https://ibb.co/jJRHh1X"><img src="https://i.ibb.co/QDdX91w/ezgif-com-video-to-gif.gif" alt="ezgif-com-video-to-gif" border="0"></a>
 
 
 

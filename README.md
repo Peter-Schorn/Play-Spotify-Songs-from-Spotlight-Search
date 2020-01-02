@@ -1,6 +1,6 @@
 # macOS-Play-Spotify-Songs-from-Spotlight-Search
 
-**With this script, you can search for a song from your playlist in spotlight search and then press enter to play the song!**
+**With this python script, you can search for a song from your playlist in spotlight search and then press enter to play the song!**
 
 This python script will retrieve all the songs in one of your spotify playlists. For each song, it will make an application named after the song which you can click to play the song in spotify. 
 <a href="https://ibb.co/tBQWfCt"><img src="https://i.ibb.co/b1Q8hdZ/Spotlight-Bright5.gif" alt="Spotlight-Bright5" border="0"></a>

@@ -24,7 +24,7 @@ as the Redirect URI. Make sure to save your changes at the bottom.
 
 Next, navigate to one of your playlists on the spotify desktop client and click on the circle with the three dots inside it, then click on share > Copy Spotify URI, as shown below. This option is only available in the desktop client, not the web player or the mobile application.
 
-![Playlist URI](https://ibb.co/WgDygVz)
+![Playlist URI](https://i.ibb.co/TmK8mW0/PLAYLIST.png)
 
 ￼
 

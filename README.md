@@ -1,6 +1,14 @@
 # macOS-Play-Spotify-Songs-from-Spotlight-Search
 This python script will retrieve all the songs in one of your spotify playlists. For each song, it will make an application named after the song which you can click to play the song in spotify. The purpose of this is so that you can search for the song in spotlight search and then press enter to play the song!
 
+
+
+
+
+
+
+
+
 This script requires the spotify desktop applicaiton. If you'd like to play songs in the webplayer instead, then let me know.
 
 The song will be played in the context of the album that it belongs too. If, instead, you want the song to play in the context of a playlist or the artist it belongs to, let me know and I'll show you how to change the code. 
@@ -44,7 +52,8 @@ Now, open the script and paste the URI into the appropriate location in line 11 
 playlist            = '2z212MPinIr8HesnJ68UoF'
 ```
 
-On line 15, specify the folder in which the songs will be downloaded to. DO NOT ADD A FORWARD SLASH TO THE END OF THE FOLDER PATH
+On line 15, specify the folder in which the songs will be downloaded to.
+**DO NOT ADD A FORWARD SLASH TO THE END OF THE FOLDER PATH**
 ```
 folder_location     = '/Users/myusername/Songs'
 ```

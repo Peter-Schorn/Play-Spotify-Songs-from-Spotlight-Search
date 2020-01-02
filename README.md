@@ -20,15 +20,19 @@ https://developer.spotify.com/dashboard/
 
 and login with your spotify account. Next, click `create client id`.  
 
-<a href="https://ibb.co/0sT095s"><img src="https://i.ibb.co/vXpNd9X/Screen-Shot-2020-01-02-at-13-24-19.png" alt="Screen-Shot-2020-01-02-at-13-24-19" border="0"></a>
+<a href="https://ibb.co/0DJBt4G"><img src="https://i.ibb.co/4mNsdvV/Screen-Shot-2020-01-02-at-13-24-19.png" alt="Screen-Shot-2020-01-02-at-13-24-19" border="0"></a>
 
+Enter any name or description and below `What are you building`, select `I don't know`. You will be provided with a Client ID and a Client Secret. Click on edit settings, 
 
-Enter any name or description and below `What are you building`, select `I don't know`. You will be provided with a Client ID and a Client Secret. Click on edit settings, and set 
+<a href="https://ibb.co/MZ250x4"><img src="https://i.ibb.co/Xj2kRrg/Screen-Shot-2020-01-02-at-13-29-19.png" alt="Screen-Shot-2020-01-02-at-13-29-19" border="0"></a>
+
+and set 
 ```
 http://localhost/
 ```
 as the Redirect URI. Make sure to save your changes at the bottom.
 
+<a href="https://ibb.co/zFmhVjh"><img src="https://i.ibb.co/KD5jxRj/Screen-Shot-2020-01-02-at-13-28-20.png" alt="Screen-Shot-2020-01-02-at-13-28-20" border="0"></a>
 
 Next, navigate to one of your playlists on the spotify desktop client and click on the circle with the three dots inside it, then click on share > Copy Spotify URI, as shown below. This option is only available in the desktop client, not the web player or the mobile application.
 

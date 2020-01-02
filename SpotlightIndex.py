@@ -1,35 +1,38 @@
-import os
-import sys
-import shutil
-import re
-import subprocess
-import requests
-import spotipy
-import spotipy.util as util
-import time
+import os, shutil, re, subprocess, requests, spotipy, spotipy.util as util, time
 #################################################################
 #################################################################
+# setting artist and alum images for the songs slows down the entire script by several orders of magnitude.
+# if you don't care about this, then set custom_icon to False. ***MAKE SURE THAT `FALSE` IS CAPATILIZED***.
 custom_icon         =  True
 playlist            = '2z212MPinIr8HesnJ68UoF'
-folder_location     = '/Users/pschorn/TempSongs'
-username            = 'petervschorn'
 
-client_id           = os.environ.get('CLIENT_ID')
-client_secret       = os.environ.get('CLIENT_SECRET')
+                    # make sure there is ***NOT*** a forward slash at the end
+folder_location     = '/Users/yourUsername/Desktop/Songs'
+
+                    # this is the username you use to login to spotify
+username            = 'myusername'
+
+                    # Refer to the README for how to get these credentials
+client_id           = 'enter client id here'
+client_secret       = 'enter client secret here'
+
 redirect_uri        = 'http://localhost/'
 scope               = 'user-library-read'
 
-# print('client id: ' + str(client_id))
-# print('client secret: ' + str(client_secret))
 ################################################################
 ################################################################
+# this retrieves the number of whole seconds that have elapsed since 1/1/1970
 TimeStamp               = (int(time.time()))
+
 BlankNamesList          = []
 SongsInPlaylist         = []
 PlaylistAlbumsList      = []
 PlaylistArtistsList     = []
 UpdateCount             = 0
 
+# These folders contain all the artist and album images.
+# When you run the script again after adding new songs to your playlist,
+#   album and artist images are only downloaded if they do not already exist in these folders.
 dirArtistImage  = folder_location + '/.Images/Artists/'
 dirAlbumImage   = folder_location + '/.Images/Albums/'
 
@@ -37,25 +40,23 @@ dirAlbumImage   = folder_location + '/.Images/Albums/'
 for f in (folder_location, folder_location + '/.Images/', dirArtistImage, dirAlbumImage):
     if not os.path.exists(f): os.mkdir(f)
 
-# if not os.path.exists(folder_location): os.mkdir(folder_location)
-# if not os.path.exists(folder_location + '/.Images/'): os.mkdir(folder_location + '/.Images/')
-# if not os.path.exists(dirArtistImage): os.mkdir(dirArtistImage)
-# if not os.path.exists(dirAlbumImage): os.mkdir(dirAlbumImage)
-
-
-
 ################################################################
+
 
 def download_tracks(tracks):
     global UpdateCount
+  # for each track in the playlist...
     for i, item in enumerate(tracks['items']):
         track           = item['track']
+      # A URI is a unique identifier for each song (album, artist, playlist, etc)
         SongURI         = track['uri']
       # Ignore local songs
         if "spotify:local:" in SongURI or SongURI == "": continue
         ################################################################
 
+      # This will be the name of the Song in Finder. You can change it if you like.
         myNameExact     = track['name'] + " - " + track['artists'][0]['name']
+        
         myNamePrint     = myNameExact
 
         myName          = myNameExact
@@ -193,11 +194,8 @@ def download_tracks(tracks):
         ################################################################
 ########################################################################
 
-
 token = util.prompt_for_user_token(username, scope, client_id, client_secret, redirect_uri)
 
-#TODO $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-#TODO $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 if token:
     sp = spotipy.Spotify(auth=token)
     PlaylistName = sp.user_playlist(username, playlist, fields="name")

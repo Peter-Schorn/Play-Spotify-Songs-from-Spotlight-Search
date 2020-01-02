@@ -4,7 +4,7 @@ import os, shutil, re, subprocess, requests, spotipy, spotipy.util as util, time
 # Setting the album and artist image for the files and folders
 # slows down the entire script by several orders of magnitude.
 # if you don't care about this, you can set `custom_icon` to False.
-# TODO: if you do this, then MAKE SURE THAT `False` IS CAPATILIZED!!!
+# if you do this, then MAKE SURE THAT `False` IS CAPATILIZED!!!
 custom_icon         =  True
 
 # This is where you enter the URI for the playlist you want to index

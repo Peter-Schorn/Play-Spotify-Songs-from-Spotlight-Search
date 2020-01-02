@@ -89,7 +89,7 @@ def download_tracks(tracks):
         ################################################################
 
       # A list of all the albums and artists in the playlist
-      # is maintained for future reference (see lines 266-303).
+      # is maintained for future reference (see lines 267-304).
         if not AlbumURI in PlaylistAlbumsList:
             PlaylistAlbumsList.append(AlbumURI)
 
@@ -116,7 +116,7 @@ def download_tracks(tracks):
             myName      = TheSong
 
       # Creates a list of all the songs in the playlist.
-      # This will later be compared with all of the downloaded songs (see lines 266-303).
+      # This will later be compared with all of the downloaded songs (see lines 267-304).
         SongsInPlaylist.append(myName)
 
         ################################################################
@@ -148,7 +148,8 @@ def download_tracks(tracks):
             f.write(
                 "osascript -e \'tell application \"Spotify\" to play track \"{}\" in context \"{}\"\'"
                     .format(SongURI, AlbumURIContext))
-      # The shell script is given permission to execute
+      
+    # The shell script is given permission to execute
         os.lchmod(dirName + "/Contents/MacOS/" + myName, 0o777)
 
         ################################################################

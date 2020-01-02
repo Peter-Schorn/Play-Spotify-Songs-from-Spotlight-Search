@@ -21,7 +21,7 @@ Also, download the request module from [here](https://github.com/andrewp-as-is/r
 
 Then, visit
 
-![https://developer.spotify.com/dashboard/](https://developer.spotify.com/dashboard/) 
+![Alt Text](https://developer.spotify.com/dashboard/) 
 
 and login with your spotify account. Next, click `create client id`.  Enter any name or description and below `What are you building`, select `I don't know`. You will be provided with a Client ID and a Client Secret. Click on edit settings, and set 
 ```

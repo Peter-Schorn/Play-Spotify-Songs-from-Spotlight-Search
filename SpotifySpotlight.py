@@ -83,7 +83,7 @@ def download_tracks(tracks):
       # This will be the name of the song in finder.
       # You can pick and choose from `TheAlbum`, `TheArtist`, and `TheSong`
       # and create a different format for the name if you like.
-      # Also make sure to update line 93 if you do this.
+      # Also make sure to update line 109 if you do this.
         myName = TheSong + ' - ' + TheArtist
 
         ################################################################

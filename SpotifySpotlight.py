@@ -221,7 +221,7 @@ def download_tracks(tracks):
         else:
             print(myName)
 
-      # A list of all the songs that have been downloaded is maintained
+      # A count of all the songs that have been downloaded is maintained
         UpdateCount += 1
       # print("###################################################################")
         ################################################################

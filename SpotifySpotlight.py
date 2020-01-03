@@ -74,7 +74,7 @@ def download_tracks(tracks):
       # Files/folders that start with a period will be hidden, so leading periods are removed.
       # For some bizarre reason, a shell-escaped `/` becomes a colon, so `/`s are replaced with colons.
       # For example, if you cd to your desktop and then run `mkdir Some:Folder`,
-      # The name of the folder will be `Some/Folder`. Don't ask me why that is.
+      # The name of the folder will be `Some/Folder`.
         for temp in [('[:]+', ''), ('/', ':'), ('^\.+', '')]:
             TheAlbum    = re.sub(temp[0], temp[1], TheAlbum)
             TheArtist   = re.sub(temp[0], temp[1], TheArtist)

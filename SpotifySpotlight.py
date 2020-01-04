@@ -4,8 +4,8 @@ import os, shutil, re, subprocess, requests, \
 
 # This is where you specify the folder in which the songs will be stored
 # TODO: **DO NOT** add a forward slash at the very end of the folder path
-folder_location  = '/Users/pschorn/MySongs'
-username         = 'petervschorn'
+folder_location  = '/Users/myUsername/Songs'
+username         = 'the username you use to log into spotify'
 
 client_id        = os.environ.get('CLIENT_ID')
 client_secret    = os.environ.get('CLIENT_SECRET')

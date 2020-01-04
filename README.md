@@ -37,12 +37,15 @@ as the Redirect URI. Make sure to save your changes at the bottom.
 
 <a href="https://ibb.co/zFmhVjh"><img src="https://i.ibb.co/KD5jxRj/Screen-Shot-2020-01-02-at-13-28-20.png" alt="Screen-Shot-2020-01-02-at-13-28-20" border="0"></a>
 
+Enter your client id, client secret, and Spotify username into the appropriate locations at the beginning of the script.
+
 
 On line 15, specify the folder in which the songs will be downloaded to.
 **DO NOT ADD A FORWARD SLASH TO THE END OF THE FOLDER PATH**
 ```
 folder_location     = '/Users/myusername/Songs'
 ```
+
 
 Now you're ready to try out the script! You must run it from terminal the first time.  When you run it the first time, you will get a message like this:
 ```

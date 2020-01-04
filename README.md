@@ -6,6 +6,8 @@
 
 **This script will retrieve all the songs in one of your Spotify playlists. For each song, it will make an application named after the song which you can click to play the song in Spotify.**
 
+
+
 This script requires the Spotify desktop applicaiton. If you'd like to play songs in the webplayer instead, then let me know.
 
 The song will be played in the context of the album that it belongs too. If, instead, you want the song to play in the context of a playlist or the artist it belongs to, let me know and I'll show you how to change the code. 

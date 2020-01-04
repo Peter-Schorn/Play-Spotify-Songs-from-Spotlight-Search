@@ -2,23 +2,23 @@
 
 **With this python script, you can search for a song from your playlist in spotlight search and then press enter to play the song!**
 
-This script will retrieve all the songs in one of your spotify playlists. For each song, it will make an application named after the song which you can click to play the song in spotify. 
+This script will retrieve all the songs in one of your Spotify playlists. For each song, it will make an application named after the song which you can click to play the song in Spotify. 
 <a href="https://ibb.co/tBQWfCt"><img src="https://i.ibb.co/b1Q8hdZ/Spotlight-Bright5.gif" alt="Spotlight-Bright5" border="100"></a>
 
-This script requires the spotify desktop applicaiton. If you'd like to play songs in the webplayer instead, then let me know.
+This script requires the Spotify desktop applicaiton. If you'd like to play songs in the webplayer instead, then let me know.
 
 The song will be played in the context of the album that it belongs too. If, instead, you want the song to play in the context of a playlist or the artist it belongs to, let me know and I'll show you how to change the code. 
 
 The songs will be sorted into folders based on the artist and album they belong to. Album cover art will be downloaded and set as the icon for the corresponding songs and for the album folders. An image for the artist will also be downloaded and set for each artist folder.
 
 To use this script, you must have the spotipy (yes, that's with a "p", not an "f") library installed, which can be found [here](https://github.com/plamere/spotipy).
-Also, download the request module from [here](https://github.com/andrewp-as-is/request.py). This module is used to download artist and album images from spotify. You must also download fileicon, a command-line utility which sets a custom icon for files and directories. It can be found [here](https://github.com/mklement0/fileicon).
+Also, download the request module from [here](https://github.com/andrewp-as-is/request.py). This module is used to download artist and album images from Spotify. You must also download fileicon, a command-line utility which sets a custom icon for files and directories. It can be found [here](https://github.com/mklement0/fileicon).
 
 Then, visit
 
 https://developer.spotify.com/dashboard/
 
-and login with your spotify account. Next, click `create client id`.  
+and login with your Spotify account. Next, click `create client id`.  
 
 <a href="https://ibb.co/0DJBt4G"><img src="https://i.ibb.co/4mNsdvV/Screen-Shot-2020-01-02-at-13-24-19.png" alt="Screen-Shot-2020-01-02-at-13-24-19" border="0"></a>
 
@@ -34,7 +34,7 @@ as the Redirect URI. Make sure to save your changes at the bottom.
 
 <a href="https://ibb.co/zFmhVjh"><img src="https://i.ibb.co/KD5jxRj/Screen-Shot-2020-01-02-at-13-28-20.png" alt="Screen-Shot-2020-01-02-at-13-28-20" border="0"></a>
 
-Next, navigate to one of your playlists on the spotify desktop client and click on the circle with the three dots inside it, then click on share > Copy Spotify URI, as shown below. This option is only available in the desktop client, not the web player or the mobile application.
+Next, navigate to one of your playlists on the Spotify desktop client and click on the circle with the three dots inside it, then click on share > Copy Spotify URI, as shown below. This option is only available in the desktop client, not the web player or the mobile application.
 
 ![Playlist URI](https://i.ibb.co/TmK8mW0/PLAYLIST.png)
 

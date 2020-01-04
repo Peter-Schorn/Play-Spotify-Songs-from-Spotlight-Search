@@ -4,7 +4,7 @@
 
 <a href="https://ibb.co/tBQWfCt"><img src="https://i.ibb.co/b1Q8hdZ/Spotlight-Bright5.gif" alt="Spotlight-Bright5" border="100"></a>
 
-**This script will retrieve all the songs in one of your Spotify playlists. For each song, it will make an application named after the song which you can click to play the song in Spotify.**
+**This script will retrieve all the songs in ALL of your Spotify playlists. For each song, it will make an application named after the song which you can click to play the song in Spotify.**
 
 #
 
@@ -37,27 +37,6 @@ as the Redirect URI. Make sure to save your changes at the bottom.
 
 <a href="https://ibb.co/zFmhVjh"><img src="https://i.ibb.co/KD5jxRj/Screen-Shot-2020-01-02-at-13-28-20.png" alt="Screen-Shot-2020-01-02-at-13-28-20" border="0"></a>
 
-Next, navigate to one of your playlists on the Spotify desktop client and click on the circle with the three dots inside it, then click on share > Copy Spotify URI, as shown below. This option is only available in the desktop client, not the web player or the mobile application.
-
-![Playlist URI](https://i.ibb.co/TmK8mW0/PLAYLIST.png)
-
-￼
-
-
-The URI will look something like this:
-```
-spotify:playlist:2z212MPinIr8HesnJ68UoF
-```
-Remove `spotify:playlist:` from the beginning so that you have something like
-```
-2z212MPinIr8HesnJ68UoF
-```
-
-Now, open the script and paste the URI into the appropriate location in line 11 of the code, as shown below. Ensure that the URI is enclosed in quotation marks!
-```
-# This is where you enter the URI for the playlist you want to index
-playlist            = '2z212MPinIr8HesnJ68UoF'
-```
 
 On line 15, specify the folder in which the songs will be downloaded to.
 **DO NOT ADD A FORWARD SLASH TO THE END OF THE FOLDER PATH**

@@ -452,9 +452,9 @@ if token:
 
         try: # You can't divide by zero!
           # The number of seconds per song to index the songs
-          #   perSongInt = round(elapsedInt / UpdateCount, 2)
+            perSongInt = round(elapsedInt / UpdateCount, 2)
           # Use the line below instead of the above one if you don't want the number rounded
-            perSongInt = elapsedInt/prCnt
+          #   perSongInt = elapsedInt/prCnt
         except: perSongInt = 0
 
 

@@ -469,7 +469,7 @@ if token:
         if prCnt > 1: print(perSong + ' per Song\033[0m')
 
         os.system(
-"osascript -e \"display notification \\\"" + FinalMsg + "\\\" with title \\\"Indexing Finished\\\"\"""")
+"osascript -e \"display notification \\\"" + FinalMsg + "\\\" with title \\\"Indexing Finished\\\"\"")
 
     else:
         print("\n\033[91mNo New Songs or Icons to Apply\n\033[0m")

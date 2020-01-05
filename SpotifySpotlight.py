@@ -465,6 +465,9 @@ if token:
         print('\033[95m\n#----------------------------------------------------#')
         print('It Took ' + elapsed + iCnOrInx + str(prCnt) + sngOrItm + GrammrUp)
         if prCnt > 1: print(perSong + ' per Song\033[0m')
+        
+        os.system("osascript -e \"display notification with title \\\"Indexing Finished\\\"\"")  
+        
     else:
         print("\n\033[91mNo New Songs or Icons to Apply\n\033[0m")
 

@@ -18,15 +18,17 @@ scope            = 'user-library-read'
 
 ################################################################
 ################################################################
+custom_icon = True
 
 # The system arguments are processed
 if len(sys.argv) > 1:
     if sys.argv[1].casefold() == 'noicon'.casefold():
       #       \033[95m = Red Color
         print('\n\033[95mIcons Have Been Disabled\033[0m\n'); custom_icon = False
-    else: print(
+    else:
+        print(
         'This script only accepts one argument: \033[95mnoicon\033[0m\nOtherwise, custom icons will be added\n')
-else: custom_icon = True
+        time.sleep(5)
 
 # The first 8 variables are assigned to a separate empty list,
 # the next two are assinged to 0 as an integer,

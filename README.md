@@ -64,4 +64,7 @@ Enter the URL you were redirected to:
 ```
 Paste the URL that was opened in your browser into your terminal and press enter. After that, the script should run. 
 
+This script accepts one system argument: `noicon`, which will disable the setting of custom icons. If you don't care about the icons, then use this because the script will run several orders of magnitude faster.
+
+
 And that's it! If you can't get something to work, or have any questions, feel free to create an issue.

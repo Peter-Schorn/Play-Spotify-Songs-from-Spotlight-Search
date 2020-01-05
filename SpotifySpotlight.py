@@ -4,15 +4,12 @@ import os, shutil, re, subprocess, requests, \
 
 # This is where you specify the folder in which the songs will be stored
 # TODO: **DO NOT** add a forward slash at the very end of the folder path
-folder_location  = '/Users/myUsername/Songs'
+folder_location  = '/Users/yourUsername/Songs'
+username         = 'the username you use to login to Spotify'
 
-username         = 'the username you use to log into spotify'
-
+# Make sure that you 
 client_id        = os.environ.get('CLIENT_ID')
-
 client_secret    = os.environ.get('CLIENT_SECRET')
-
-
 redirect_uri     = 'http://localhost/'
 scope            = 'user-library-read'
 
@@ -84,7 +81,7 @@ def download_tracks(tracks):
       # This will be the name of the song in finder.
       # You can pick and choose from `TheAlbum`, `TheArtist`, and `TheSong`
       # and create a different format for the name if you like.
-      # Also make sure to update lines 66 and 95 if you do this.
+      # Also make sure to update line 91 if you do this.
         myName = TheSong + ' - ' + TheArtist
 
         ################################################################
@@ -234,6 +231,7 @@ if token:
         plistURI  = playlist['uri']
         tTracks   = playlist['tracks']['total']
         if tTracks == 0: continue
+
         tGrmmr = '' if tTracks == 1 else 's'
 
         print('\033[95mIndexing ' + plistName + ' - ' + str(tTracks) + ' Track' + tGrmmr + '\n\033[0m')
@@ -242,7 +240,7 @@ if token:
             tracks = sp.user_playlist_tracks(username, plistURI, limit=100, offset=offset)
             if len(tracks['items']) == 0: print(''); break
             if tTracks > 100:
-                Lnum = offset + 1; Rnum = Lnum + len(tracks['items'])
+                Lnum = offset + 1; Rnum = (Lnum + len(tracks['items']) -1)
 
                 print('\n       \033[95mIndexing Tracks ' + '{:>3}'.format(Lnum) \
                       + ' - ' + '{:<3}'.format(Rnum) + '\033[0m\n')
@@ -251,20 +249,22 @@ if token:
         # break
 
 
+  # TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   # The URIs for the song and the associated artist and album are read straight out of the application.
   # A boolean value—which is True if the Icon has already been set for the appliation, and False if it hasn't—
   # is also read
     for root, dirs, files in os.walk(folder_location):
         for dirApp in dirs:
             if dirApp.endswith('.app'):
-                FileToRead   = os.path.join(root, dirApp) + '/Contents/MacOS/' + os.path.splitext(dirApp)[0]       # 6
+                FileToRead   = os.path.join(root, dirApp) + '/Contents/MacOS/' + os.path.splitext(dirApp)[0] # 6
 
               # These regular expressions retrieve the song URI, album URI, and artist URI
-              #TODO IndexedSongs:
+              # IndexedSongs:
                 savedSongURI   = (re.search('track "(.*)" in', open(FileToRead, "r").read()).group(1))       # 2
                 savedAlbumURI  = (re.search("spotify:album:(.*)\"'", open(FileToRead, "r").read()).group(1)) # 3
                 savedArtistURI = (re.search("##(.*)", open(FileToRead, "r").read()).group(1))                # 4
                 isIcon         = (re.search("###(.*)", open(FileToRead, "r").read()).group(1))               # 5
+
 
               # The full file path, name, and URIs of the song
               # are appended as a sub-tuple to a tuple containing all of the downloaded songs.
@@ -313,7 +313,7 @@ if token:
                 readf.write(rData)
                 readf.close()
 
-      # If the song is not in the playlist..
+      # If the downloaded song is no longer in any playlists..
         else:
             ListOfRemovedSongs.append(
                 (indexSong[5], indexSong[1], 'Album URI: [' + indexSong[3] + ']',
@@ -337,14 +337,13 @@ if token:
 
     ########################################################################
   #TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  #TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  #TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
     if len(artistIcons) + len(albumIcons) != 0 and custom_icon == True:
         artMsg = True; alMsg = True
 
       # Apply artist images to artist folders
         for artistI in artistIcons:
+          # if the icon does not already exist, then...
             if not os.path.exists(artistI[0] + "/Icon\r"):
                 if artMsg: print('\n\033[95mApplying Artist Icons\n\033[0m'); artMsg = False
                 try:
@@ -464,12 +463,14 @@ if token:
 
       # print how long it took to index the songs
         GrammrUp = '' if prCnt == 1 else 's'
+        FinalMsg = 'It Took ' + elapsed + iCnOrInx + str(prCnt) + sngOrItm + GrammrUp
         print('\033[95m\n#----------------------------------------------------#')
-        print('It Took ' + elapsed + iCnOrInx + str(prCnt) + sngOrItm + GrammrUp)
+        print(FinalMsg)
         if prCnt > 1: print(perSong + ' per Song\033[0m')
-        
-        os.system("osascript -e \"display notification with title \\\"Indexing Finished\\\"\"")  
-        
+
+        os.system(
+"osascript -e \"display notification \\\"" + FinalMsg + "\\\" with title \\\"Indexing Finished\\\"\"""")
+
     else:
         print("\n\033[91mNo New Songs or Icons to Apply\n\033[0m")
 

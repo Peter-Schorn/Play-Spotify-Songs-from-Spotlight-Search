@@ -45,6 +45,21 @@ dirAlbumImage    = folder_location + '/.Images/Albums/'
 for f in (folder_location, folder_location + '/.Images/', dirArtistImage, dirAlbumImage):
     if not os.path.exists(f): os.mkdir(f)
 
+
+# Download a custom Icon for the songs folder if has not previously been downloaded
+SpotifyIcon = folder_location + '/.Images/Spotify.png'
+if not os.path.exists(SpotifyIcon):
+    with open(SpotifyIcon, 'wb') as f:
+        f.write(requests.get('https://i.ibb.co/89MbxQv/Spotify-Folder-Square.png').content)
+
+# Set the icon for the songs folder if it has not already been set
+# An `Icon\r` file will be created when a custom icon is set.
+# This line checks if this file exists and sets the custom icon only if this file doesn't exist.
+if not os.path.exists(folder_location + "/Icon\r"):
+    subprocess.run(
+        ['/usr/local/bin/fileicon', 'set', '-q',
+         folder_location, SpotifyIcon])
+
 ################################################################
 
 def download_tracks(tracks):

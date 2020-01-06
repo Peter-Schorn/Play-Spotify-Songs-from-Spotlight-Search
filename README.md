@@ -73,7 +73,9 @@ Paste the URL of this page into your terminal and press enter. After that, the s
 
 This script accepts one command line argument: `noicon`, which will disable the setting of custom icons. If you don't care about the icons, then use this because the script will run several orders of magnitude faster. If you run the script once using the `noicon` argument, you can then run it again without the `noicon` argument and all the icons will be applied to your songs! This included pre-downloaded songs and any songs you have added to any of your playlists since running the script the first time. 
 
-After adding new songs to an existing playlist and/or creating and/or following new playlists you can re-run the script and only the new songs will be downloaded! 
+After adding new songs to an existing playlist and/or creating and/or following new playlists you can re-run the script and only the new songs will be downloaded!
+
+Furthermore, please note that if you remove songs from any of your playlists since the last time you ran you ran the script, then the next time you run it, **these songs will be removed from your downloaded songs folder**. 
 
 
 And that's it! If you can't get something to work, or have any questions, feel free to create an issue.

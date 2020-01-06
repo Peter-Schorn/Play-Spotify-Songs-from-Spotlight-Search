@@ -47,7 +47,7 @@ folder_location     = '/Users/myusername/Songs'
 ```
 
 
-Now you're ready to try out the script! You must run it from terminal the first time.  When you run it the first time, you will get a message like this:
+Now you're ready to try out the script! You must run it from terminal the first time.  When you run it the first time, **A webpage should have been opened in your broswer** and you will get a message like this:
 ```
 
             User authentication requires interaction with your
@@ -62,7 +62,12 @@ Opened https://accounts.spotify.com/authorize?client_id=ce3e747efc764258963ec7a4
 
 Enter the URL you were redirected to: 
 ```
-Paste the URL that was opened in your browser into your terminal and press enter. After that, the script should run. 
+
+You may be asked to login with your spotify account. After you do so, you will be redirected to a page that looks something like this:
+
+<a href="https://ibb.co/0DC8z04"><img src="https://i.ibb.co/znXjt39/Screen-Shot-2020-01-06-at-10-46-26.png" alt="Screen-Shot-2020-01-06-at-10-46-26" border="0"></a>
+
+Paste the URL of this page into your terminal and press enter. After that, the script should run. 
 
 # How to Use
 

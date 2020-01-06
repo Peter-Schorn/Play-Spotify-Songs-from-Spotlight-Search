@@ -47,7 +47,7 @@ folder_location     = '/Users/myusername/Songs'
 ```
 
 
-Now you're ready to try out the script! You must run it from terminal the first time.  When you run it the first time, **A webpage should have been opened in your broswer** and you will get a message like this:
+Now you're ready to try out the script! You must run it from terminal the first time.  When you run it the first time, you will get a message like this in your terminal and **A webpage should have been opened in your broswer**:
 ```
 
             User authentication requires interaction with your

@@ -6,7 +6,7 @@
 
 **This script will retrieve all the songs in ALL of your Spotify playlists. For each song, it will make an application named after the song which you can click to play the song in Spotify.**
 
-#
+# Installation and Setup
 
 This script requires the Spotify desktop applicaiton. If you'd like to play songs in the webplayer instead, then let me know.
 
@@ -64,7 +64,11 @@ Enter the URL you were redirected to:
 ```
 Paste the URL that was opened in your browser into your terminal and press enter. After that, the script should run. 
 
-This script accepts one command line argument: `noicon`, which will disable the setting of custom icons. If you don't care about the icons, then use this because the script will run several orders of magnitude faster.
+# How to Use
+
+This script accepts one command line argument: `noicon`, which will disable the setting of custom icons. If you don't care about the icons, then use this because the script will run several orders of magnitude faster. If you run the script once using the `noicon` argument, you can then run it again without the `noicon` argument and all the icons will be applied to your songs! This included pre-downloaded songs and any songs you have added to any of your playlists since running the script the first time. 
+
+After adding new songs to an existing playlist and/or creating and/or following new playlists you can re-run the script and only the new songs will be downloaded! 
 
 
 And that's it! If you can't get something to work, or have any questions, feel free to create an issue.

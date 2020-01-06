@@ -63,9 +63,9 @@ Opened https://accounts.spotify.com/authorize?client_id=ce3e747efc764258963ec7a4
 Enter the URL you were redirected to: 
 ```
 
-You may be asked to login with your spotify account. After you do so, you will be redirected to a page that looks something like this:
+On the webpage, you may be asked to login with your spotify account. After you do so, you will be redirected to a page that looks something like the image below. If you're not asked to login, you will be immediately redirected to something like the page below.
 
-<a href="https://ibb.co/0DC8z04"><img src="https://i.ibb.co/znXjt39/Screen-Shot-2020-01-06-at-10-46-26.png" alt="Screen-Shot-2020-01-06-at-10-46-26" border="0"></a>
+<a href="https://ibb.co/GFR5JTX"><img src="https://i.ibb.co/KmWrGwY/Screen-Shot-2020-01-06-at-10-56-36.png" alt="Screen-Shot-2020-01-06-at-10-56-36" border="0"></a>
 
 Paste the URL of this page into your terminal and press enter. After that, the script should run. 
 

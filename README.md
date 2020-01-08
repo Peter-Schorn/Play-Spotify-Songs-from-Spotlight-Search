@@ -10,7 +10,10 @@
 
 This script requires the Spotify desktop applicaiton. If you'd like to play songs in the webplayer instead, then let me know.
 
-The song will be played in the context of the album that it belongs too. If, instead, you want the song to play in the context of a playlist or the artist it belongs to, let me know and I'll show you how to change the code. 
+The song will be played in the context of the PLAYLIST that it belongs too. (in previous versions, the song would play in the contect of the album that it belonged to.) If, instead, you want the song to play in the context of the album or the artist it belongs to, let me know and I'll show you how to change the code. 
+
+**You can now search for and play all of your playlists as well as your songs!**
+
 
 The songs will be sorted into folders based on the artist and album they belong to. Album cover art will be downloaded and set as the icon for the corresponding songs and for the album folders. An image for the artist will also be downloaded and set for each artist folder.
 
@@ -40,7 +43,7 @@ as the Redirect URI. Make sure to save your changes at the bottom.
 Enter your client id, client secret, and Spotify username into the appropriate locations at the beginning of the script.
 
 
-On line 15, specify the folder in which the songs will be downloaded to.
+Don't forget to specify the folder in which the songs will be downloaded to.
 **DO NOT ADD A FORWARD SLASH TO THE END OF THE FOLDER PATH**
 ```
 folder_location     = '/Users/myusername/Songs'

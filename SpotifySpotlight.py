@@ -37,13 +37,14 @@ if len(sys.argv) > 1:
 allSongs, allAlbums, allArtists, RmvdSongs, savedSongs, plylsts, \
 UpdateCount, numm, TimeStamp = [], [], [], [], [], [], 0, 0, int(time.time())
 
-dirArtistImage   = folder_location + '/.Images/Artists/'
-dirAlbumImage    = folder_location + '/.Images/Albums/'
-
+pListsdir       = folder_location + '/Playlists/'
+Imagedir        = folder_location + '/.Images/'
+dirArtistImage  = Imagedir + 'Artists/'
+dirAlbumImage   = Imagedir + 'Albums/'
 
 # Hidden folders that contain all the artist and album images are created.
 # This is so that each album and artist image is only downloaded once.
-for f in (folder_location, folder_location + '/.Images/', dirArtistImage, dirAlbumImage):
+for f in (folder_location, pListsdir, Imagedir, dirArtistImage, dirAlbumImage):
     if not os.path.exists(f): os.mkdir(f)
 
 
@@ -186,7 +187,7 @@ def download_tracks(tracks, plistURI):
               # This is the code that will be executed when the application is opened.
                 f.write("#!/bin/bash\n")
                 f.write(
-                    "osascript -e \'tell application \"Spotify\" to play track \"{}\" in context \"{}\"\'"
+                    "osascript -e \'tell application \"Spotify\" to play track \"{}\" in context \"spotify:playlist:{}\"\'"
                         .format(SongURI, plistURI))
 
               # Store the album URI, artist URI, and a boolean
@@ -227,30 +228,141 @@ if token:
 
   # For each of a user's playlists...
     for playlist in playlists['items']:
-        plistName   = playlist['name']
-        plistURI    = playlist['uri']
         tTracks     = playlist['tracks']['total']
         if tTracks == 0: continue
+        plistName   = playlist['name']
+        plistURI    = playlist['id']
+        if playlist['images']:
+            ImgURL  = playlist['images'][0]['url']
+        else:
+            ImgURL  = None
 
-        plylsts.append((plistURI, plistName, tTracks))
+        for r in [('[:]+', ''), ('/', ':'), ('^\.+', '')]:
+            plistName = re.sub(r[0], r[1], plistName)
 
-    for playlist in plylsts:
+      # TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+        plylsts.append([plistName, plistURI, ImgURL, tTracks])
+                        # 0        # 1       # 2     # 3
 
-        tGrmmr = '' if playlist[2] == 1 else 's'
-        print('\033[95mIndexing ' + playlist[1] + ' - ' + str(playlist[2]) + ' Track' + tGrmmr + '\n\033[0m')
+            
+    def dupCheck(PlistList):
+        seen = []
+        for x in PlistList:
+            if x in seen: return True
+            else: seen.append(x)
+
+    while dupCheck(pNme[0] for pNme in plylsts):
+        seenPlists = []
+        for pList in plylsts:
+            if pList[0] in seenPlists:
+                if type(pList[0]) is list:
+                    pList[0][1] += 1
+                else:
+                    pList[0] = [pList[0], 2]
+            if not pList[0] in plylsts:
+                seenPlists.append(pList[0])
+
+    for pList in plylsts:
+        if type(pList[0]) is list: pList[0] = pList[0][0] + ' ' + str(pList[0][1])
+  # TODO: plylsts = list of all the Spotify playlists $$$$$$$$$$$$$$$$$$$$$$$$$$$
+  # TODO: [0:plistName, 1:plistURI, 2:ImgURL, 3:tTracks] $$$$$$$$$$$$$$$$$$$$$$$$
+
+
+  # TODO: List of all the downloaded Songs
+    svdPlylsts = []
+    for dirApp in os.listdir(pListsdir):
+        if dirApp.endswith('.app'):
+            svdpListNme = os.path.splitext(dirApp)[0]
+            svdpListApth = pListsdir + dirApp
+            svdpListEpth = svdpListApth + '/Contents/MacOS/' + svdpListNme
+            svdpListURI = (re.search('spotify:playlist:(.*)"', open(svdpListEpth, "r").read()).group(1))
+          # TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+            svdPlylsts.append([svdpListNme, svdpListURI])
+                               # 0          # 1
+
+  # Check if the playlist has been renamed and remove it if it ha
+    for svdApp in svdPlylsts:
+        if not svdApp in [[plyst[0], plyst[1]] for plyst in plylsts]:
+            shutil.rmtree(pListsdir + svdApp[0] + '.app')
+            # svdPlylsts.remove(svdApp)
+            if not svdApp[0] in RmvdSongs:
+                RmvdSongs.append(svdApp[0])
+
+
+  # I don't even feel like explaining this block
+    for svdApp in svdPlylsts:
+        if not svdApp[1] in [pURI[1] for pURI in plylsts]:
+            if os.path.exists(pListsdir + svdApp[0] + '.app'):
+                if not svdApp[0] in RmvdSongs:
+                    RmvdSongs.append(svdApp[0])
+                try: bgnName = re.search('^(.+?)\s+\d+$', svdApp[0]).group(1)
+                except: bgnName = svdApp[0]
+                for dupApp in os.listdir(pListsdir):
+                    if dupApp.startswith(bgnName) and dupApp.endswith('.app'):
+                        shutil.rmtree(pListsdir + dupApp)
+
+
+    for pList in plylsts:
+        pListApp = pListsdir + pList[0] + '.app'
+        if not os.path.exists(pListApp):
+
+            os.mkdir(pListApp)
+            os.mkdir(pListApp + "/Contents")
+            with open(pListApp + "/Contents/PkgInfo", "w+") as f:
+                # This identifies the directory as an application
+                f.write("APPL????")
+            os.mkdir(pListApp + "/Contents/MacOS")
+            with open(pListApp + "/Contents/MacOS/" + pList[0], "w+") as f:
+                f.write("#!/bin/bash\n")
+                f.write(
+            "osascript -e \'tell application \"Spotify\" to set shuffling to true\' "
+            "-e \'tell application \"Spotify\" to play track \"spotify:playlist:" + pList[1] + "\"\'")
+            # The shell script is given permission to execute
+            os.lchmod(pListApp + "/Contents/MacOS/" + pList[0], 0o777)
+
+        if not (os.path.exists(pListApp + "/Icon\r") or pList[2] is None) and custom_icon == True:
+            iconset   = Imagedir + pList[1] + '.iconset/'
+            os.mkdir(iconset)
+            pListJPG  = Imagedir + pList[1] + '.jpeg'
+            pListPNG  = iconset + 'icon_256x256.png'
+            pListICNS = Imagedir + pList[1] + '.icns'
+
+            with open(pListJPG, 'wb') as f:
+                f.write(requests.get(pList[2]).content)
+
+            os.system('sips -s format png ' + pListJPG + ' -o ' + pListPNG + ' >/dev/null')
+            os.system('sips -z 256 256 ' + pListPNG + ' >/dev/null')
+            os.system('sips -z 128 128 ' + pListPNG + ' -o ' + iconset + 'icon_128x128.png' + ' >/dev/null')
+            os.system(
+                'sips -z 32 32 ' + iconset + 'icon_128x128.png' + ' -o ' + iconset + 'icon_32x32.png' + ' >/dev/null')
+            os.system(
+                'sips -z 16 16 ' + iconset + 'icon_32x32.png' + ' -o ' + iconset + 'icon_16x16.png' + ' >/dev/null')
+            os.system('iconutil -c icns ' + iconset + ' -o ' + pListICNS)
+            os.remove(pListJPG); shutil.rmtree(iconset)
+
+            try:
+                subprocess.run(
+                    ['/usr/local/bin/fileicon', 'set', '-q',
+                     pListApp, pListICNS])
+            except: pass
+            if os.path.exists(pListICNS): os.remove(pListICNS)
+
+        ################################################################
+
+
+        tGrmmr = '' if pList[3] == 1 else 's'
+        print('\033[95mIndexing ' + pList[0] + ' - ' + str(pList[3]) + ' Track' + tGrmmr + '\n\033[0m')
 
         for offset in range(0, 10000, 100):
-            tracks = sp.user_playlist_tracks(username, playlist[0], limit=100, offset=offset)
+            tracks = sp.user_playlist_tracks(username, pList[1], limit=100, offset=offset)
             if len(tracks['items']) == 0: print(''); break
-            if playlist[2] > 100:
+            if pList[3] > 100:
                 Lnum = offset + 1; Rnum = (Lnum + len(tracks['items']) -1)
 
                 print('\n       \033[95mIndexing Tracks ' + '{:>3}'.format(Lnum) \
                       + ' - ' + '{:<3}'.format(Rnum) + '\033[0m\n')
 
-            download_tracks(tracks, playlist[0])
-
-        # break
+            download_tracks(tracks, pList[1])
 
 else:
     print("Can't get token for", username)
@@ -263,7 +375,8 @@ else:
 # is also read
 for root, dirs, files in os.walk(folder_location):
     for dirApp in dirs:
-        if dirApp.endswith('.app'):
+        if dirApp.endswith('.app') and root != folder_location + '/Playlists':
+
             FileToRead   = os.path.join(root, dirApp) + '/Contents/MacOS/' + os.path.splitext(dirApp)[0]
 
           # These regular expressions retrieve the song URI, album URI, artist URI,
@@ -313,7 +426,7 @@ for savedSong in savedSongs:
                 iconset  = dirAlbumImage + savedSong[3] + '.iconset/'
                 albumJPG = dirAlbumImage + savedSong[3] + '.jpeg'
                 albumPNG = iconset + 'icon_256x256.png'
-                os.mkdir(iconset) # TODO <<<<<<<<<<<<<<<<<
+                os.mkdir(iconset)
 
               # Downlaod the album image
                 with open(albumJPG, 'wb') as f:
@@ -322,7 +435,6 @@ for savedSong in savedSongs:
               # This block converts the image from jpeg to apple's proprietary icns format.
               # This allow the icons to render faster in finder.
                 os.system('sips -s format png ' + albumJPG + ' -o ' + albumPNG + ' >/dev/null')
-
                 os.system('sips -z 256 256 ' + albumPNG + ' >/dev/null')
                 os.system('sips -z 128 128 ' + albumPNG + ' -o ' + iconset + 'icon_128x128.png' + ' >/dev/null')
                 os.system(
@@ -460,7 +572,7 @@ for root, dirs, files in os.walk(folder_location, topdown=False):
 
 # Displays a list of removed songs
 if RmvdSongs:# if list is not empty, then...
-    GrammrRemovedSongs = ' Song Was ' if len(RmvdSongs) == 1 else ' Songs Were '
+    GrammrRemovedSongs = ' Item Was ' if len(RmvdSongs) == 1 else ' Items Were '
     print(
         "\n\033[91m################### " + str(len(RmvdSongs)) + GrammrRemovedSongs + "Removed ###################\033[0m\n")
     for i in RmvdSongs: print(re.sub(':', '/', i))
@@ -527,8 +639,9 @@ if UpdateCount + numm != 0:
     print(FinalMsg)
     if prCnt > 1: print(perItem + ' per' + sngOrItm + '\033[0m')
 
+  # see https://apple.co/2N9hedH for more info about applescript notifications
     os.system(
-"osascript -e \"display notification \\\"" + FinalMsg + "\\\" with title \\\"Indexing Finished\\\"\"")
+"osascript -e \"display notification \\\"" + FinalMsg + "\\\" with title \\\"Indexing Finished\\\" sound name \\\"Glass\\\"\"")
 
 else:
     print("\n\033[91mNo New Songs or Icons to Apply\n\033[0m")

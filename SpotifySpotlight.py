@@ -341,7 +341,6 @@ if token:
 
         ################################################################
 
-        continue
 
         tGrmmr = '' if pList[3] == 1 else 's'
         print('\033[95mIndexing ' + pList[0] + ' - ' + str(pList[3]) + ' Track' + tGrmmr + '\n\033[0m')
@@ -361,7 +360,6 @@ else:
     print("Can't get token for", username)
     sys.exit()
 
-sys.exit()
 ################################################################
 
 # The URIs for the song and the associated artist and album are read straight out of the application.

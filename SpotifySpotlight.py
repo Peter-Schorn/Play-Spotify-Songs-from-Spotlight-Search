@@ -244,7 +244,8 @@ if token:
         plylsts.append([plistName, plistURI, ImgURL, tTracks])
                         # 0        # 1       # 2     # 3
 
-            
+    
+
     def dupCheck(PlistList):
         seen = []
         for x in PlistList:
@@ -259,8 +260,7 @@ if token:
                     pList[0][1] += 1
                 else:
                     pList[0] = [pList[0], 2]
-            if not pList[0] in plylsts:
-                seenPlists.append(pList[0])
+            if not pList[0] in plylsts: seenPlists.append(pList[0])
 
     for pList in plylsts:
         if type(pList[0]) is list: pList[0] = pList[0][0] + ' ' + str(pList[0][1])
@@ -280,22 +280,13 @@ if token:
             svdPlylsts.append([svdpListNme, svdpListURI])
                                # 0          # 1
 
-  # Check if the playlist has been renamed and remove it if it ha
+
+  # If a playlist has been renamed, then delete the saved version
     for svdApp in svdPlylsts:
         if not svdApp in [[plyst[0], plyst[1]] for plyst in plylsts]:
-            shutil.rmtree(pListsdir + svdApp[0] + '.app')
-            # svdPlylsts.remove(svdApp)
-            if not svdApp[0] in RmvdSongs:
-                RmvdSongs.append(svdApp[0])
-
-
-  # I don't even feel like explaining this block
-    for svdApp in svdPlylsts:
-        if not svdApp[1] in [pURI[1] for pURI in plylsts]:
             if os.path.exists(pListsdir + svdApp[0] + '.app'):
-                if not svdApp[0] in RmvdSongs:
-                    RmvdSongs.append(svdApp[0])
-                try: bgnName = re.search('^(.+?)\s+\d+$', svdApp[0]).group(1)
+                if not svdApp[0] in RmvdSongs: RmvdSongs.append(svdApp[0])
+                try: bgnName = re.search('^(.+?)\s\d+$', svdApp[0]).group(1)
                 except: bgnName = svdApp[0]
                 for dupApp in os.listdir(pListsdir):
                     if dupApp.startswith(bgnName) and dupApp.endswith('.app'):
@@ -320,6 +311,7 @@ if token:
             # The shell script is given permission to execute
             os.lchmod(pListApp + "/Contents/MacOS/" + pList[0], 0o777)
 
+      # download the playlist image and convert it from jpeg to icns
         if not (os.path.exists(pListApp + "/Icon\r") or pList[2] is None) and custom_icon == True:
             iconset   = Imagedir + pList[1] + '.iconset/'
             os.mkdir(iconset)
@@ -349,6 +341,7 @@ if token:
 
         ################################################################
 
+        continue
 
         tGrmmr = '' if pList[3] == 1 else 's'
         print('\033[95mIndexing ' + pList[0] + ' - ' + str(pList[3]) + ' Track' + tGrmmr + '\n\033[0m')
@@ -368,6 +361,7 @@ else:
     print("Can't get token for", username)
     sys.exit()
 
+sys.exit()
 ################################################################
 
 # The URIs for the song and the associated artist and album are read straight out of the application.
@@ -593,6 +587,7 @@ def formatTime(s):
     minutes = s // 60
     strminutes = '1 Minute' if minutes == 1 else str(minutes) + ' Minutes'
     if minutes != 0: tList.append(strminutes)
+  # Hi Mom!
   # print('Minute: ' + strminutes)
 
     s = s - minutes * 60

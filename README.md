@@ -40,7 +40,7 @@ as the Redirect URI. Make sure to save your changes at the bottom.
 
 <a href="https://ibb.co/zFmhVjh"><img src="https://i.ibb.co/KD5jxRj/Screen-Shot-2020-01-02-at-13-28-20.png" alt="Screen-Shot-2020-01-02-at-13-28-20" border="0"></a>
 
-Enter your client id, client secret, and Spotify username into the appropriate locations at the beginning of the script.
+**Enter your client id, client secret, and Spotify username into the appropriate locations at the beginning of the script.**
 
 
 Don't forget to specify the folder in which the songs will be downloaded to.

@@ -10,7 +10,7 @@
 
 This script requires the Spotify desktop applicaiton. If you'd like to play songs in the webplayer instead, then let me know.
 
-The song will be played in the context of the PLAYLIST that it belongs too. (in previous versions, the song would play in the contect of the album that it belonged to.) If, instead, you want the song to play in the context of the album or the artist it belongs to, let me know and I'll show you how to change the code. 
+The song will be played in the context of the PLAYLIST that it belongs too. (in previous versions, the song would play in the context of the album that it belonged to.) If, instead, you want the song to play in the context of the album or the artist it belongs to, let me know and I'll show you how to change the code. 
 
 **You can now search for and play all of your playlists as well as your songs!**
 

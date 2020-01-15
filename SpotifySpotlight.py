@@ -1,5 +1,4 @@
-import os, shutil, re, subprocess, requests, \
-    spotipy, spotipy.util as util, time, sys
+import os, shutil, re, subprocess, requests, spotipy, spotipy.util as util, time, sys
 #################################################################
 
 # This is where you specify the folder in which the songs will be stored
@@ -83,7 +82,6 @@ if not os.path.exists(folder_location + "/Icon\r"):
 
 ################################################################
 
-# noinspection PyShadowingNames
 def download_tracks(tracks, plistURI):
     global allSongs, allArtists, allAlbums, UpdateCount
 
@@ -216,8 +214,6 @@ if token:
 
   # TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   # TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  # TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-  # TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
   # TODO: This is where the Spotify Web API is queried using Spotipy.
   # Spotify only returns 100 songs at a time. Therefore, multiple requests are made.
   # Also note that there is a 10,000 track limit for playlists.
@@ -244,7 +240,6 @@ if token:
         plylsts.append([plistName, plistURI, ImgURL, tTracks])
                         # 0        # 1       # 2     # 3
 
-    
 
     def dupCheck(PlistList):
         seen = []
@@ -268,14 +263,14 @@ if token:
   # TODO: [0:plistName, 1:plistURI, 2:ImgURL, 3:tTracks] $$$$$$$$$$$$$$$$$$$$$$$$
 
 
-  # TODO: List of all the downloaded Songs
+  # TODO: List of all the downloaded playlists
     svdPlylsts = []
     for dirApp in os.listdir(pListsdir):
         if dirApp.endswith('.app'):
-            svdpListNme = os.path.splitext(dirApp)[0]
+            svdpListNme  = os.path.splitext(dirApp)[0]
             svdpListApth = pListsdir + dirApp
             svdpListEpth = svdpListApth + '/Contents/MacOS/' + svdpListNme
-            svdpListURI = (re.search('spotify:playlist:(.*)"', open(svdpListEpth, "r").read()).group(1))
+            svdpListURI  = (re.search('spotify:playlist:(.*)"', open(svdpListEpth, "r").read()).group(1))
           # TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
             svdPlylsts.append([svdpListNme, svdpListURI])
                                # 0          # 1
@@ -286,8 +281,9 @@ if token:
         if not svdApp in [[plyst[0], plyst[1]] for plyst in plylsts]:
             if os.path.exists(pListsdir + svdApp[0] + '.app'):
                 if not svdApp[0] in RmvdSongs: RmvdSongs.append(svdApp[0])
-                try: bgnName = re.search('^(.+?)\s\d+$', svdApp[0]).group(1)
-                except: bgnName = svdApp[0]
+                result = re.match('^(.+?)\s\d+$', svdApp[0])
+                if result: bgnName = result.group(1)
+                else: bgnName = svdApp[0]
                 for dupApp in os.listdir(pListsdir):
                     if dupApp.startswith(bgnName) and dupApp.endswith('.app'):
                         shutil.rmtree(pListsdir + dupApp)
@@ -341,6 +337,8 @@ if token:
 
         ################################################################
 
+      # TODO: DEBUG $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+      #   continue
 
         tGrmmr = '' if pList[3] == 1 else 's'
         print('\033[95mIndexing ' + pList[0] + ' - ' + str(pList[3]) + ' Track' + tGrmmr + '\n\033[0m')
@@ -357,8 +355,10 @@ if token:
             download_tracks(tracks, pList[1])
 
 else:
-    print("Can't get token for", username)
-    sys.exit()
+    print("Can't get token for", username); sys.exit()
+
+# TODO: DEBUG $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+# sys.exit()
 
 ################################################################
 
@@ -571,10 +571,10 @@ if RmvdSongs:# if list is not empty, then...
 
 ########################################################################
 # This function takes an integer number of seconds as input and
-# outputs a length of time in human-readable format.
+# outputs a length of time in human-readable format with correct grammar.
 # For example: 3 hours, 1 minute, and 2 seconds.
 def formatTime(s):
-    if s == 0: return('0 Seconds')
+    if s == 0: return '0 Seconds'
     tList = []
     hours = s // 3600
     strhours = '1 Hour' if hours == 1 else str(hours) + ' Hours'
@@ -585,7 +585,6 @@ def formatTime(s):
     minutes = s // 60
     strminutes = '1 Minute' if minutes == 1 else str(minutes) + ' Minutes'
     if minutes != 0: tList.append(strminutes)
-  # Hi Mom!
   # print('Minute: ' + strminutes)
 
     s = s - minutes * 60
@@ -595,11 +594,11 @@ def formatTime(s):
   # print('Second: ' + s)
 
   # print(tList)
-    if len(tList) == 1: return(tList[0])
-    if len(tList) == 2:
-        return(tList[0] + ' and ' + tList[1])
+    if   len(tList) == 1: return tList[0]
+    elif len(tList) == 2:
+        return tList[0] + ' and ' + tList[1]
     else:
-        return(tList[0] + ', ' + tList[1] + ', and ' + tList[2])
+        return tList[0] + ', ' + tList[1] + ', and ' + tList[2]
 
 ########################################################################
 
@@ -622,7 +621,6 @@ if UpdateCount + numm != 0:
         perItemInt = round(elapsedInt / prCnt, 2)
     except: perItemInt = 0
 
-
     perItem    = formatTime(perItemInt)
 
   # print how long it took to index the songs
@@ -631,10 +629,13 @@ if UpdateCount + numm != 0:
     print('\033[95m\n#----------------------------------------------------#')
     print(FinalMsg)
     if prCnt > 1: print(perItem + ' per' + sngOrItm + '\033[0m')
+    print('')
 
   # see https://apple.co/2N9hedH for more info about applescript notifications
     os.system(
-"osascript -e \"display notification \\\"" + FinalMsg + "\\\" with title \\\"Indexing Finished\\\" sound name \\\"Glass\\\"\"")
+r'osascript -e "display notification \"' + FinalMsg + r'\" with title \"Indexing Finished\" sound name \"Glass\""')
 
 else:
     print("\n\033[91mNo New Songs or Icons to Apply\n\033[0m")
+    os.system(
+r'osascript -e "display notification \"No New Songs or Icons to Apply\" sound name \"Glass\""')

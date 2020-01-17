@@ -255,7 +255,7 @@ if token:
                     pList[0][1] += 1
                 else:
                     pList[0] = [pList[0], 2]
-            if not pList[0] in plylsts: seenPlists.append(pList[0])
+            else: seenPlists.append(pList[0])
 
     for pList in plylsts:
         if type(pList[0]) is list: pList[0] = pList[0][0] + ' ' + str(pList[0][1])

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import os, shutil, re, subprocess, requests, spotipy, spotipy.util as util, time, sys
 #################################################################
 
@@ -359,8 +360,8 @@ else:
 ################################################################
 
 # The URIs for the song and the associated artist and album are read straight out of the application.
-# A boolean value—which is True if the Icon has already been set for the appliation, and False if it hasn't—
-# is also read
+# A boolean value, which is True if the Icon has already been set for the appliation, and False if it hasn't,
+# is also read.
 for root, dirs, files in os.walk(folder_location):
     for dirApp in dirs:
         if dirApp.endswith('.app') and root != folder_location + '/Playlists':

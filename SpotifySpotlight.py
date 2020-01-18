@@ -17,11 +17,12 @@ scope            = 'playlist-read-private'
 
 ################################################################
 ################################################################
+
 custom_icon = True
 
 # The system arguments are processed
 if len(sys.argv) > 1:
-    if sys.argv[1].casefold() == 'noicon'.casefold():
+    if sys.argv[1].casefold() == 'noicon':
       #       \033[95m = Red Color
         print('\n\033[95mIcons Have Been Disabled\033[0m\n')
         custom_icon = False; time.sleep(2)
@@ -63,11 +64,8 @@ if not os.path.exists(SpotifyICNS):
         'sips -z 32 32 ' + iconset + 'icon_128x128.png' + ' -o ' + iconset + 'icon_32x32.png' + ' >/dev/null')
     os.system(
         'sips -z 16 16 ' + iconset + 'icon_32x32.png' + ' -o ' + iconset + 'icon_16x16.png' + ' >/dev/null')
-
     os.system('iconutil -c icns ' + iconset + ' -o ' + SpotifyICNS)
-
     os.system('iconutil -c icns ' + iconset + ' -o ' + SpotifyICNS + ' >/dev/null')
-
     os.remove(SpotifyPNG); shutil.rmtree(iconset)
 
 # Set the icon for the songs folder if it has not already been set
@@ -197,7 +195,7 @@ def download_tracks(tracks, plistURI):
           # The shell script is given permission to execute
             os.lchmod(dirName + "/Contents/MacOS/" + myName, 0o777)
 
-            if custom_icon == False: print(re.sub(':', '/', myName))
+            if not custom_icon: print(re.sub(':', '/', myName))
 
           # A count of all the songs that have been *NEWLY* downloaded is maintained
             UpdateCount += 1
@@ -239,7 +237,6 @@ if token:
       # TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
         plylsts.append([plistName, plistURI, ImgURL, tTracks])
                         # 0        # 1       # 2     # 3
-
 
     def dupCheck(PlistList):
         seen = []
@@ -337,8 +334,7 @@ if token:
 
         ################################################################
 
-      # TODO: DEBUG $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-      #   continue
+        # continue
 
         tGrmmr = '' if pList[3] == 1 else 's'
         print('\033[95mIndexing ' + pList[0] + ' - ' + str(pList[3]) + ' Track' + tGrmmr + '\n\033[0m')
@@ -413,7 +409,6 @@ for savedSong in savedSongs:
             if icnmsg: print('\033[95mApplying Song Icons\n\033[0m'); icnmsg = False
 
             if not os.path.exists(albumICNS) and savedSong[7] != 'none':
-          # TODO: DOWNLOAD ALBUM ICON USING URL
 
                 iconset  = dirAlbumImage + savedSong[3] + '.iconset/'
                 albumJPG = dirAlbumImage + savedSong[3] + '.jpeg'
@@ -479,7 +474,7 @@ for savedSong in savedSongs:
 
 ########################################################################
 
-if custom_icon == True:
+if custom_icon:
     artMsg = True; alMsg = True
 
   # Apply artist images to artist folders
@@ -510,7 +505,6 @@ if custom_icon == True:
 
                   # Convert from jpeg to png
                     os.system('sips -s format png ' + artistJPG + ' -o ' + artistPNG + ' >/dev/null')
-
                   # Convert from png to icns
                     os.system('sips -z 256 256 ' + artistPNG + ' >/dev/null')
                     os.system('sips -z 128 128 ' + artistPNG + ' -o ' + iconset + 'icon_128x128.png' + ' >/dev/null')
@@ -605,21 +599,21 @@ def formatTime(s):
 if UpdateCount + numm != 0:
     if UpdateCount == 0:
         print("\n\033[91mNo New Songs\n\033[0m")
-        prCnt     = numm
-        iCnOrInx  = ' to Apply an Icon to ' if prCnt == 1 else ' to Apply Icons to '
-        sngOrItm  = ' Item'
+        prCnt    = numm
+        iCnOrInx = ' to Apply an Icon to ' if prCnt == 1 else ' to Apply Icons to '
+        sngOrItm = ' Item'
     else:
-        iCnOrInx  = ' to Update '
-        prCnt     = UpdateCount
-        sngOrItm  = ' Song'
+        iCnOrInx = ' to Update '
+        prCnt    = UpdateCount
+        sngOrItm = ' Song'
 
-    elapsedInt    = (int(time.time())) - TimeStamp
-    elapsed       = formatTime(elapsedInt)
+    elapsedInt   = (int(time.time())) - TimeStamp
+    elapsed      = formatTime(elapsedInt)
 
-    try: # You can't divide by zero!
+    try:
       # The number of seconds per item to index/apply icons to the items
         perItemInt = round(elapsedInt / prCnt, 2)
-    except: perItemInt = 0
+    except ZeroDivisionError: perItemInt = 0
 
     perItem    = formatTime(perItemInt)
 

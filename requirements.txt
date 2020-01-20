@@ -1,0 +1,6 @@
+requests==2.22.0
+spotify-token==0.1.2
+spotipy==2.4.4
+
+# you also need to install `fileicon`, a commmand-line utility,
+# from https://github.com/mklement0/fileicon

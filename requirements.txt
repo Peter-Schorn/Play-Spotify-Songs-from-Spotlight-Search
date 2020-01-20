@@ -1,6 +1,10 @@
+certifi==2019.11.28
+chardet==3.0.4
+idna==2.8
 requests==2.22.0
-spotify-token==0.1.2
-spotipy==2.4.4
+six==1.14.0
+spotipy==2.6.3
+urllib3==1.25.7
 
 # you also need to install `fileicon`, a commmand-line utility,
 # from https://github.com/mklement0/fileicon

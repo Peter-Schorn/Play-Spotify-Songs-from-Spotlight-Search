@@ -7,6 +7,6 @@ six==1.14.0
 spotipy==2.8.0
 urllib3==1.25.8
 
-# you also need to install `fileicon`, a commmand-line utility
+# you also need to install fileicon, a commmand-line utility
 # that applies custom icons to files/folders
 # from https://github.com/mklement0/fileicon

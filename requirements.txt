@@ -1,11 +1,11 @@
-certifi==2019.11.28
-chardet==3.0.4
-idna==2.8
-Pillow==7.0.0
-requests==2.22.0
-six==1.14.0
-spotipy==2.8.0
-urllib3==1.25.8
+certifi>=2019.11.28
+chardet>=3.0.4
+idna>=2.8
+Pillow>=7.0.0
+requests>=2.22.0
+six>=1.14.0
+spotipy>=2.8.0
+urllib3>=1.25.8
 
 # you also need to install fileicon, a commmand-line utility
 # that applies custom icons to files/folders

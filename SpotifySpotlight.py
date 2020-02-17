@@ -566,7 +566,6 @@ def setIcon(setf, imgDict, path, typ, isPNG=False, rmICNS=False):
 
         dims.reverse()
         dims.insert(0, dims[0])
-        startICNS = True if selectedImg == dims[0] else False
 
         PNG = icnset + 'icon_{0}x{0}.png'.format(dims[0])
 
@@ -576,7 +575,6 @@ def setIcon(setf, imgDict, path, typ, isPNG=False, rmICNS=False):
             os.system('sips -s format png {} -o {} >/dev/null'.format(JPG, PNG))
 
         for a, c in enumerate(dims[1:]):
-            if a == 0 and startICNS: continue
             os.system(
                 'sips -z {1} {1} {0}icon_{2}x{2}.png -o {0}icon_{1}x{1}.png >/dev/null'
                     .format(icnset, c, dims[a]))

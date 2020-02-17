@@ -39,7 +39,7 @@ Next, visit
 
 https://developer.spotify.com/dashboard/
 
-and login with your Spotify account. Next, click `create a client id`.  
+and login with your Spotify account. Then, click `create a client id`.  
 
 <a href="https://ibb.co/0DJBt4G"><img src="https://i.ibb.co/4mNsdvV/Screen-Shot-2020-01-02-at-13-24-19.png" alt="Screen-Shot-2020-01-02-at-13-24-19" border="0"></a>
 

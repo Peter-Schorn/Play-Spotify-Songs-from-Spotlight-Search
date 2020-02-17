@@ -57,8 +57,8 @@ for ic, ie in zip(intSpotipyVers, expectedVersion):
     if int(ic) < ie:
         print('The version of the Spotipy module you have is {}\n'
               'You need {} or greater for this script to work.\n'
-              'If you have pip3, you can upgrade spotipy by running\n\n'
-              '\033[95mpip3 install spotipy --upgrade\033[0m'
+              'If you have pip, you can upgrade spotipy by running\n\n'
+              '\033[95mpip install spotipy --upgrade\033[0m'
               .format(str(spotipyVers),
               '.'.join(str(jie) for jie in expectedVersion)),
               end='\n\n')

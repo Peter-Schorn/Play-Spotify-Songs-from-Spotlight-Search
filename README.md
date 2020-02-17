@@ -27,10 +27,12 @@ urllib3>=1.25.8
 ```
 The above text is in the [requirements.txt](https://github.com/Peter-Schorn/Play-Spotify-Songs-from-Spotlight-Search/blob/master/requirements.txt) file of this repository.
 
-To install all of these dependencies at once, download the requirements.txt file and run
+If you have pip, you can install all of these dependencies at once by downloading the `requirements.txt` file and then running
 ```
 pip install -r file/path/to/requirements.txt
 ```
+You can download pip [here](https://pip.pypa.io/en/stable/installing/)
+
 
 This script also requires [fileicon](https://github.com/mklement0/fileicon), a command-line utility which applies custom icons to files and directories.
 

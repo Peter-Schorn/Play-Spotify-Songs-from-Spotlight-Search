@@ -4,27 +4,41 @@
 
 <a href="https://ibb.co/tBQWfCt"><img src="https://i.ibb.co/b1Q8hdZ/Spotlight-Bright5.gif" alt="Spotlight-Bright5" border="100"></a>
 
-**This script will retrieve all the songs in ALL of your Spotify playlists. For each song, it will make an application named after the song which you can click to play the song in Spotify.**
+**This script will retrieve all the songs in ALL of your Spotify playlists. For each song, it will make an application named after the song, which you can click to play the song in Spotify. It will also make an application for each of your playlists.**
+
+Song will be played in the context of the playlist they belong to.
+
+This script requires the Spotify desktop applicaiton.
+
+The songs will be sorted into folders based on the artist and album they belong to. Album cover art will be downloaded and set as the icon for the corresponding songs and for the album folders, and artist images will be set for each artist folder.
 
 # Installation and Setup
 
-This script requires the Spotify desktop applicaiton. If you'd like to play songs in the webplayer instead, then let me know.
+This script requires the following dependencies:
+```
+certifi>=2019.11.28
+chardet>=3.0.4
+idna>=2.8
+Pillow>=7.0.0
+requests>=2.22.0
+six>=1.14.0
+spotipy>=2.8.0
+urllib3>=1.25.8
+```
+The above text is in the [requirements.txt](https://github.com/Peter-Schorn/Play-Spotify-Songs-from-Spotlight-Search/blob/master/requirements.txt) file of this repository.
 
-The song will be played in the context of the PLAYLIST that it belongs too. (in previous versions, the song would play in the context of the album that it belonged to.) If, instead, you want the song to play in the context of the album or the artist it belongs to, let me know and I'll show you how to change the code. 
+To install all of these dependencies at once, download the requirements.txt file and run
+```
+pip install -r file/path/to/requirements.txt
+```
 
-**You can now search for and play all of your playlists as well as your songs!**
+This script also requires [fileicon](https://github.com/mklement0/fileicon), a command-line utility which applies custom icons to files and directories.
 
-
-The songs will be sorted into folders based on the artist and album they belong to. Album cover art will be downloaded and set as the icon for the corresponding songs and for the album folders. An image for the artist will also be downloaded and set for each artist folder.
-
-To use this script, you must have the spotipy (yes, that's with a "p", not an "f") library installed, which can be found [here](https://github.com/plamere/spotipy).
-Also, download the request module from [here](https://github.com/andrewp-as-is/request.py). This module is used to download artist and album images from Spotify. You must also download fileicon, a command-line utility which sets a custom icon for files and directories. It can be found [here](https://github.com/mklement0/fileicon).
-
-Then, visit
+Next, visit
 
 https://developer.spotify.com/dashboard/
 
-and login with your Spotify account. Next, click `create client id`.  
+and login with your Spotify account. Next, click `create a client id`.  
 
 <a href="https://ibb.co/0DJBt4G"><img src="https://i.ibb.co/4mNsdvV/Screen-Shot-2020-01-02-at-13-24-19.png" alt="Screen-Shot-2020-01-02-at-13-24-19" border="0"></a>
 
@@ -40,14 +54,54 @@ as the Redirect URI. Make sure to save your changes at the bottom.
 
 <a href="https://ibb.co/zFmhVjh"><img src="https://i.ibb.co/KD5jxRj/Screen-Shot-2020-01-02-at-13-28-20.png" alt="Screen-Shot-2020-01-02-at-13-28-20" border="0"></a>
 
+
 **Enter your client id, client secret, and Spotify username into the appropriate locations at the beginning of the script.**
 
+**Fill in the following parameters at the beginning of the script:**
+```
+###############################################################
+###############################################################
+###############################################################
 
-Don't forget to specify the folder in which the songs will be downloaded to.
-**DO NOT ADD A FORWARD SLASH TO THE END OF THE FOLDER PATH**
+# Enter the folder where you want the files to be stored
+folder_location = "/Users/pschorn/sp/Songs/"
+
+# Enter the username you use to login to Spotify
+username = "petervschorn"
+
+# Set this to False if you don't want custom icons
+custom_icon = True
+
+# Enter the path to the text file where your
+# client id and client secret are stored
+credentials = "/Users/pschorn/.local/spotify_credentials.txt"
+
+# Enter the full path to the fileicon executable.
+# It's recommended to put it in /usr/local/bin
+# If you donwloaded it, but don't know where it is,
+# run `which fileicon` in terminal.
+fileicon_path = "/usr/local/bin/fileicon"
+
+# Enter your preferred dimensions for each of the images;
+# they will always be square.
+# Your options are: 1024, 512, 256, and 128
+# Some sizes may not be available in certain cases.
+album_image_size    = 512
+artist_image_size   = 512
+playlist_image_size = 512
+
+# This is where your Spotify credentials are stored.
+# Only change this if you need to.
+cachePath = os.path.join(str(Path.home()), 'sp/.cache_{}_{}'.format(username, scope))
+# cachePath = os.path.join(str(Path.home()), '.cache_{}_{}'.format(username, scope))
+
+###############################################################
+###############################################################
+###############################################################
 ```
-folder_location     = '/Users/myusername/Songs'
-```
+
+
+
 
 
 Now you're ready to try out the script! You must run it from terminal the first time.  When you run it the first time, you will get a message like this in your terminal and **a webpage should have been opened in your broswer**:

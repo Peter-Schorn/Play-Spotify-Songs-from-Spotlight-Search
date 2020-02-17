@@ -38,8 +38,7 @@ playlist_image_size = 512
 
 # This is where your access token is stored.
 # Only change this if you need to.
-cachePath = os.path.join(str(Path.home()), 'sp/.cache_{}_{}'.format(username, scope))
-# cachePath = os.path.join(str(Path.home()), '.cache_{}_{}'.format(username, scope))
+cachePath = os.path.join(str(Path.home()), '.cache_{}_{}'.format(username, scope))
 
 ###############################################################
 ###############################################################

@@ -104,7 +104,7 @@ cachePath = os.path.join(str(Path.home()), 'sp/.cache_{}_{}'.format(username, sc
 ###############################################################
 ```
 
-Now you're ready to try out the script! When you run it the first time, you will get a dialogbox like this and **a webpage should have been opened in your broswer**:
+Now you're ready to try out the script! When you run it the first time, you will get a dialog box like this and **a webpage should have been opened in your broswer**:
 
 <img src="https://i.ibb.co/zxXZJHc/Screen-Shot-2020-02-17-at-1-34-24.png" alt="Screen-Shot-2020-02-17-at-1-34-24" border="0">
 

@@ -42,7 +42,7 @@ and login with your Spotify account. Next, click `create a client id`.
 
 <a href="https://ibb.co/0DJBt4G"><img src="https://i.ibb.co/4mNsdvV/Screen-Shot-2020-01-02-at-13-24-19.png" alt="Screen-Shot-2020-01-02-at-13-24-19" border="0"></a>
 
-Enter any name or description and below `What are you building`, select `I don't know`. You will be provided with a Client ID and a Client Secret. Click on edit settings, 
+Enter any name or description and below `What are you building`, select `I don't know`. You will be provided with a **Client ID** and a **Client Secret**. Click on edit settings, 
 
 <a href="https://ibb.co/MZ250x4"><img src="https://i.ibb.co/Xj2kRrg/Screen-Shot-2020-01-02-at-13-29-19.png" alt="Screen-Shot-2020-01-02-at-13-29-19" border="0"></a>
 
@@ -54,8 +54,11 @@ as the Redirect URI. Make sure to save your changes at the bottom.
 
 <a href="https://ibb.co/zFmhVjh"><img src="https://i.ibb.co/KD5jxRj/Screen-Shot-2020-01-02-at-13-28-20.png" alt="Screen-Shot-2020-01-02-at-13-28-20" border="0"></a>
 
-
-**Enter your client id, client secret, and Spotify username into the appropriate locations at the beginning of the script.**
+Save your client id and client secret into a text file with the following format
+```
+client id = abcabcabcabcabcabcabcabcabcabcab
+client secret = abcabcabcabcabcabcabcabcabcabcab
+```
 
 **Fill in the following parameters at the beginning of the script:**
 ```
@@ -64,17 +67,17 @@ as the Redirect URI. Make sure to save your changes at the bottom.
 ###############################################################
 
 # Enter the folder where you want the files to be stored
-folder_location = "/Users/pschorn/sp/Songs/"
+folder_location = "/Users/your_username/Songs/"
 
 # Enter the username you use to login to Spotify
-username = "petervschorn"
+username = "username"
 
 # Set this to False if you don't want custom icons
 custom_icon = True
 
 # Enter the path to the text file where your
 # client id and client secret are stored
-credentials = "/Users/pschorn/.local/spotify_credentials.txt"
+credentials = "/Users/your_username/.local/spotify_credentials.txt"
 
 # Enter the full path to the fileicon executable.
 # It's recommended to put it in /usr/local/bin
@@ -90,7 +93,7 @@ album_image_size    = 512
 artist_image_size   = 512
 playlist_image_size = 512
 
-# This is where your Spotify credentials are stored.
+# This is where your access token is stored.
 # Only change this if you need to.
 cachePath = os.path.join(str(Path.home()), 'sp/.cache_{}_{}'.format(username, scope))
 # cachePath = os.path.join(str(Path.home()), '.cache_{}_{}'.format(username, scope))
@@ -100,31 +103,15 @@ cachePath = os.path.join(str(Path.home()), 'sp/.cache_{}_{}'.format(username, sc
 ###############################################################
 ```
 
+Now you're ready to try out the script! When you run it the first time, you will get a dialogbox like this and **a webpage should have been opened in your broswer**:
 
-
-
-
-Now you're ready to try out the script! You must run it from terminal the first time.  When you run it the first time, you will get a message like this in your terminal and **a webpage should have been opened in your broswer**:
-```
-
-            User authentication requires interaction with your
-            web browser. Once you enter your credentials and
-            give authorization, you will be redirected to
-            a url.  Paste that url you were directed to to
-            complete the authorization.
-
-        
-Opened https://accounts.spotify.com/authorize?client_id=ce3e747efc764258963ec7a4bb6f80fc&response_type=code&redirect_uri=http%3A%2F%2Flocalhost%2F&scope=user-library-read in your browser
-
-
-Enter the URL you were redirected to: 
-```
+<img src="https://i.ibb.co/zxXZJHc/Screen-Shot-2020-02-17-at-1-34-24.png" alt="Screen-Shot-2020-02-17-at-1-34-24" border="0">
 
 On the webpage, you may be asked to login with your spotify account. After you do so, you will be redirected to a page that looks something like the image below. If you're not asked to login, you will be immediately redirected to something like the page below.
 
 <a href="https://ibb.co/GFR5JTX"><img src="https://i.ibb.co/KmWrGwY/Screen-Shot-2020-01-06-at-10-56-36.png" alt="Screen-Shot-2020-01-06-at-10-56-36" border="0"></a>
 
-Paste the URL of this page into your terminal and press enter. After that, the script should run. 
+Paste the URL of this page into the dialog box and press enter. After that, the script should run. 
 
 # How to Use
 

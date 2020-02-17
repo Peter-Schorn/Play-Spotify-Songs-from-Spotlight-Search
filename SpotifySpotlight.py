@@ -49,7 +49,7 @@ cachePath = os.path.join(str(Path.home()), 'sp/.cache_{}_{}'.format(username, sc
 
 print()
 
-# TODO: Check that the Spotipy verion is >= 2.8.0
+# TODO: Check that the Spotipy version is >= 2.8.0
 spotipyVers = get_distribution('spotipy').version
 intSpotipyVers = spotipyVers.split('.')
 expectedVersion = [2, 8, 0]

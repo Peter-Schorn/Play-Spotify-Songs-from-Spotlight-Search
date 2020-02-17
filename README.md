@@ -33,8 +33,7 @@ pip install -r file/path/to/requirements.txt
 ```
 You can download pip [here](https://pip.pypa.io/en/stable/installing/)
 
-
-This script also requires [fileicon](https://github.com/mklement0/fileicon), a command-line utility which applies custom icons to files and directories.
+**This script also requires [fileicon](https://github.com/mklement0/fileicon), a command-line utility which applies custom icons to files and directories.**
 
 Next, visit
 

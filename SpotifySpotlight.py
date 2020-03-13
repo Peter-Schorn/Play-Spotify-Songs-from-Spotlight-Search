@@ -3,7 +3,7 @@ import os, shutil, re, subprocess, requests, pickle, \
        spotipy, time, sys, bisect
 from pathlib import Path; from PIL import Image
 from pkg_resources import get_distribution
-scope = 'playlist-read-private'
+scope = 'playlist-read-private user-library-read'
 
 ###############################################################
 ###############################################################
@@ -38,35 +38,34 @@ playlist_image_size = 512
 
 # This is where your access token is stored.
 # Only change this if you need to.
-cachePath = os.path.join(str(Path.home()), '.cache_{}_{}'.format(username, scope))
+cachePath = os.path.join(Path.home(), '.cache_{}_{}'.format(username, scope))
 
 ###############################################################
 ###############################################################
 ###############################################################
 
-# TODO: $$$$$$$$$$$$$$$$$$$ -- CONSTANTS -- $$$$$$$$$$$$$$$$$$$
+# TODO: $$$$$$$$$$$$$$$$$$$$$ -- SETUP -- $$$$$$$$$$$$$$$$$$$$$
 
 print()
 
 # TODO: Check that the Spotipy version is >= 2.8.0
-spotipyVers = get_distribution('spotipy').version
-intSpotipyVers = spotipyVers.split('.')
-expectedVersion = [2, 8, 0]
-for ic, ie in zip(intSpotipyVers, expectedVersion):
+spotipyVers     = get_distribution('spotipy').version
+spltSpotipyVers = spotipyVers.split('.')
+expectedVersion = (2, 8, 0)
+for ic, ie in zip(spltSpotipyVers, expectedVersion):
     if int(ic) < ie:
-        print('The version of the Spotipy module you have is {}\n'
-              'You need {} or greater for this script to work.\n'
-              'If you have pip, you can upgrade spotipy by running\n\n'
-              '\033[95mpip install spotipy --upgrade\033[0m'
-              .format(str(spotipyVers),
-              '.'.join(str(jie) for jie in expectedVersion)),
-              end='\n\n')
+        print(
+            'The version of the Spotipy module you have is {}\n'
+            'You need {} or greater for this script to work.\n'
+            'If you have pip, you can upgrade spotipy by running\n\n'
+            '\033[95mpip install spotipy --upgrade\033[0m\n\n'
+            .format(spotipyVers,
+            '.'.join(str(jie) for jie in expectedVersion)))
         sys.exit()
-    elif int(ic) == ie: continue
-    break
+    elif int(ic) > ie: break
 
 if len(sys.argv) > 1 and sys.argv[1] in \
-('___chngPlist___', '___chngAlb___', '___rnPlist___'):
+('___chngPlist___', '___rnPlist___'):
     isMain = False
 else:
     isMain = True
@@ -84,44 +83,25 @@ if os.path.exists(credentials):
     if not client_id or not client_secret: print(); sys.exit()
 else:
     print('The file where your client id and client secrets are stored could not be found:'
-          '\n' + credentials + '\n')
+          f'\n{credentials}\n')
     sys.exit()
 
-spAlbums       = {}
-spArtists      = {}
-spSongs        = {}
-spPlists       = {}
-rmvdItems      = ([], [])  # ([removed songs], [removed playlists])
-updCnt         = 0
-TimeStamp      = int(time.time())
-fullScriptPath = sys.executable + ' ' + sys.argv[0]
-redirect_uri   = 'http://localhost/'
+# TODO: Constants
+redirect_url   = 'http://localhost/'
+updateCount    = 0
+fullScriptPath = f'{sys.executable} {sys.argv[0]}'
+rmvdItems      = {'Artist': [], 'Album': [], 'Song': [], 'Playlist': []}
+dataDir        = os.path.join(folder_location, '.Data/')
+pickleDir      = os.path.join(dataDir, 'Pickle')
+plistsDir      = os.path.join(folder_location, 'Playlists/')
+artImgDir      = os.path.join(dataDir, 'Artists/')
+albImgDir      = os.path.join(dataDir, 'Albums/')
 
-# Hidden folders that contain all the artist and album images are created.
-# This is so that each album and artist image is only downloaded once.
-plistsDir = os.path.join(folder_location, 'Playlists/')
-dataDir   = os.path.join(folder_location, '.Data/')
-artImgDir = os.path.join(dataDir, 'Artists/')
-albImgDir = os.path.join(dataDir, 'Albums/')
-pickleDir = dataDir + 'Pickle'
+################################################################
 
-# TODO: Check if fileicon is installed
-if os.path.exists(fileicon_path):
-    if custom_icon:
-        dimd = {'alb': 256, 'art': 256, 'pls': 256}
-        for dx in (('alb', album_image_size), ('art', artist_image_size), ('pls', playlist_image_size)):
-            if dx[1] in (1024, 512, 256, 128):
-                dimd[dx[0]] = dx[1]
-else:
-    custom_icon = False
-    print('Icons have been disabled because '
-          + str(fileicon_path) + ' was not found\n')
-    if isMain: time.sleep(3)
+# TODO: $$$$$$$$$$$$$$$$$$$ -- FUNCTIONS -- $$$$$$$$$$$$$$$$$$$$
 
-###############################################################
-# TODO: $$$$$$$$$$$$$$$$$$$ -- FUNCTIONS -- $$$$$$$$$$$$$$$$$$$
-
-def printRe(prntItem, prnt=True):
+def rePrint(prntItem, prnt=True):
     '''
     When saving an item to Finder, a `/` must be
     shell-escaped as a ':', so this function
@@ -131,8 +111,8 @@ def printRe(prntItem, prnt=True):
     '''
 
     prntItem = re.sub(':', '/', prntItem)
-    if prnt: print(prntItem)
-    else: return prntItem
+    if not prnt: return prntItem
+    print(prntItem)
 
 def osaMsg(msg, knd='n', titl='Spotify', snd='Glass'):
     '''
@@ -162,35 +142,51 @@ def mkrmDir(mkrm, fItem):
         r: remove directory
         rf: remove file
         o: make directory and delete previous directory if it exists
-    :param fItem: a path to a file or folder
+    :param fItem:
+        a imgPath to a file or folder
+        or a tuple with partial file paths, which will be joined.
     '''
-    if mkrm == 'm':
+
+    if type(fItem) is tuple: fItem = os.path.join(*fItem)
+
+    # Make a directory
+    if mkrm == 'mkDir':
         if not os.path.exists(fItem):
             os.makedirs(fItem); return True
-    elif mkrm == 'r':
+    # Remove a directory
+    elif mkrm == 'rmDir':
         if os.path.exists(fItem):
             shutil.rmtree(fItem); return True
-    elif mkrm == 'rf':
+    # Remove a file
+    elif mkrm == 'rmFile':
         if os.path.exists(fItem):
             os.remove(fItem); return True
-    elif mkrm == 'o':
+    # Make folder and replace it if it already exists
+    elif mkrm == 'owrDir':
         if os.path.exists(fItem):
             shutil.rmtree(fItem)
         os.mkdir(fItem)
 
-def mkApp(appDir, appName, code):
+def mkApp(parentDir=None, appName=None, code=None):
     '''
     Makes an application
 
-    :param appDir: the parent directory of the app
+    :param parentDir: the parent directory of the app
     :param appName: the name of the app
-    :param code: either a string consisting of a playlist uri
-    or a tuple consisting of a song uri and a playlist uri
-    :returns: True if the app was made and None if the app already exists
+    :param code:
+        either a string consisting of a playlist id - used to make playlist app
+        or a tuple consisting of
+        (song id, playlist/album id to play song in context of, albumId, artistId)
+        - used to make song app
+    :returns True if the app was made and None if the app already exists
     '''
-    global fullScriptPath
-    appPth = os.path.join(appDir, appName) + '.app'
-    if mkrmDir('m', appPth):
+
+    global fullScriptPath  # the path to THIS python script
+    if type(parentDir) is tuple:
+        parentDir = os.path.join(*parentDir)
+
+    appPth = os.path.join(parentDir, appName) + '.app'
+    if mkrmDir('mkDir', appPth):
         os.mkdir(appPth + '/Contents')
         with open(appPth + '/Contents/PkgInfo', 'w') as fa:
             fa.write('APPL????')
@@ -198,88 +194,126 @@ def mkApp(appDir, appName, code):
         with open(appPth + '/Contents/MacOS/' + appName, 'w') as fa:
             fa.write('#!/bin/bash\n')
 
-            if type(code) is str:
+            if type(code) is str:  # makes playlist app: code = playlist id
                 fa.write(
-'osascript -e \'tell application "Spotify" to set shuffling to true\''
-' -e \'tell application "Spotify" to play track "spotify:playlist:{0}"\''
-'\n\n{1} ___rnPlist___ {0}'.format(code, fullScriptPath))
+        'osascript -e \'tell application "Spotify" to set shuffling to true\' '
+        '-e \'tell application "Spotify" to play track "spotify:playlist:{0}"\''
+        '\n\n{1} ___rnPlist___ {0}'.format(code, fullScriptPath))
 
-            else:
+            else:  # makes song app: code = (song id, context, album id, artist id)
                 fa.write(
-'osascript -e \'tell application "Spotify" to play track "spotify:track:{0}" in context "spotify:playlist:{1}"\''
-'\n\n{2} ___chngPlist___ {0}'.format(code[0], code[1], fullScriptPath))
+        'osascript -e \'tell application "Spotify" to play '
+        'track "spotify:track:{0}" in context "spotify:{1}"\''
+        '\n\n{4} ___chngPlist___ {0} {2} {3}'
+        .format(code[0], code[1], code[2], code[3], fullScriptPath))
+              # song id, album id, artist id
+              # OLD: song id, context, album id, artist id
 
         # The shell script is given permission to execute
-        os.lchmod(appPth + '/Contents/MacOS/' + appName, 0o777)
+        os.lchmod(f'{appPth}/Contents/MacOS/{appName}', 0o777)
         return True
 
-def chunkPrint(itemN, length):
+def chngSongContext(parentDir=None, appName=None, context=None):
     '''
-    If length > 100:
-        When the next set of 100 items is reached or itemN == 0,
-        a range from itemN to min(itemN + 100, length of items) is printed
-    :param itemN: current item
-    :param length: total number of items
+    Changes the context that a song is played in
+    :param parentDir: the file path to the song
+    :param appName: the name of the app
+    :param context: the new context to play the song in
     '''
 
-    if itemN % 100 == 0 and length > 100:
-        itemNr = length if itemN + 100 > length else itemN + 100
-        print('\n\033[95m{:>4} - {:<4}\033[0m\n'.format(itemN + 1, itemNr))
+    if type(parentDir) is tuple: parentDir = os.path.join(*parentDir)
+    binaryPath = f'{os.path.join(parentDir, appName)}.app/Contents/MacOS/{appName}'
 
-def allUserPlaylists(spUser):
+    if not os.path.exists(binaryPath):
+        # print(f"chngSongContext: path doesn't exist: {binaryPath}")
+        return
+
+    with open(binaryPath) as find:
+        chngContext = re.sub(
+             '" in context "spotify:(.*)"',
+            f'" in context "spotify:{context}"',
+            find.read())
+
+    with open(binaryPath, 'w') as repl:
+        repl.write(chngContext)
+
+def finderFormat(f, usedNames=None, default=None, songArtist=False):
     '''
-    Spotify only returns 50 playlists per request,
-    so multiple requests are made to the API.
-    :param spUser: a Spotify username
-    :returns A list of all of a user's playlists
+    Removes/Escapes characters that can't be
+    used/have special meaning in the macOS file system.
+
+    Also appends numbers to strings that are duplicated.
+    For example, if two or more playlists have the same name, the number 2 will be added
+    to the second one, 3 to the third, and so on.
+
+    This function is applied to all strings that will be used as names for files/folders
+
+    macOS does not allow files/folders to include a colon, so they are removed.
+    Files/folders with a leading period get marked as hidden, so they are removed.
+    A shell-escaped `/` becomes a colon, so `/`s are replaced with colons.
+    For example, if you cd to your desktop and then run `mkdir Some:Folder`,
+    The name of the folder will be `Some/Folder`.
+    See http://bit.ly/38FsMhK for more info.
+
+    :param f: the name of an item
+    :param usedNames: the names that have already been used
+    :param default: the default name if f becomes a blank string after the regex
+    :param songArtist: If f is a songname, then the artist name gets appended to the end
     '''
+
+    if f:
+        for r in ((':', ''), ('/', ':'), ('^\.+', '')):
+            f = re.sub(r[0], r[1], f)
+
+    # If f is None or an empty string, then the default name is used
+    if f:
+        fExact = f
+    else:
+        f = fExact = default
+
+    if songArtist: f += f' - {songArtist}'
+
+    n = 2
+    while f in usedNames:
+        f = f'{fExact} {n}'
+        if songArtist: f += f' - {songArtist}'
+        n += 1
+
+    assert f, f'f is falsy: [{f}]; default: [{default}]'
+    return f
+
+def spExtend(spResults, pagePrint=True):
+    '''
+    The Spotify web API sometimes returns paginated results
+    This function makes multiple requests to the API until all 'pages'
+    are returned
+    :param spResults: The Spotify endpoint to retrieve results from
+    :param pagePrint: Truthy = print the current page. Else don't print anything
+    :returns: all pages of the reults in one list
+    '''
+
     global sp
-    spPlistResults = sp.user_playlists(spUser)
-    extendedPlists = spPlistResults['items']
-    while spPlistResults['next']:
-        spPlistResults = sp.next(spPlistResults)
-        extendedPlists.extend(spPlistResults['items'])
-    return extendedPlists
+    extendedResults = spResults['items']
+    limitt = spResults['limit']
 
-def indexPlaylist(plistDict, playlist):
-    '''
-    Extracts information from a user's playlists
+    if spResults['next']:
+        if pagePrint:
+            # print(f' 1 - {limitt}')
+            print('\t{:>4} - {:<4}'.format(1, limitt))
+            num = limitt + 1
+        while spResults['next']:
+            spResults = sp.next(spResults)
+            extendedResults.extend(spResults['items'])
+            if pagePrint:
+                print('\t{:>4} - {:<4}'.format(
+                    num, len(spResults['items']) + num - 1))
+                num += limitt
 
-    :param plistDict: a dictionary to store info for each playlist
-    :param playlist: a nested dictionary for a given playlist provided by spotipy
-    :returns: the playlist uri
-    '''
-    tTracks = playlist['tracks']['total']
-    if not tTracks: return
-    plistName = playlist['name']
-    plistURI = playlist['id']
-    if 'images' in playlist and playlist['images']:
-        plistImgDict = playlist['images']
-    else: plistImgDict = None
-
-    if plistName:
-        for sysrp in ((':', ''), ('/', ':'), ('^\.+', '')):
-            plistName = re.sub(sysrp[0], sysrp[1], plistName)
-    if not plistName: plistName = 'Playlist'
-    exactPlistName = plistName
-
-    dPnm = 2
-    while plistName in (dwp['name'] for dwp in plistDict.values()):
-        plistName = exactPlistName + ' ' + str(dPnm)
-        dPnm += 1
-
-    plistDict[plistURI] = \
-    {'name': plistName, 'imgs': plistImgDict,'num': tTracks}
-
-    return plistURI
+    if pagePrint: print()
+    return extendedResults
 
 def renamePlaylistApp(oldName=None, newName=None):
-    '''
-    Renames a playlist app
-
-    :param oldName: previous name
-    :param newName: new name
-    '''
+    '''Renames a playlist app'''
 
     global plistsDir
     if not newName: newName = oldName + ' '
@@ -290,229 +324,184 @@ def renamePlaylistApp(oldName=None, newName=None):
     os.rename(plistsDir + newName + '.app/Contents/MacOS/' + oldName,
               plistsDir + newName + '.app/Contents/MacOS/' + newName)
 
-def updatePlaylists(savedPs, spotifyPs, isUpdate=None):
-    '''
-    Compares playlists from Spotify with downloaded playlists
-    and renames, makes, and sets icons for them as needed
-
-    :param savedPs: info about downloaded playlists
-    :param spotifyPs: info about current playlists on Spotify
-    :param isUpdate: increment an update counter
-    '''
-
-    global rmvdItems, custom_icon
-
-    for svdpK, svdpV in savedPs.items():
-        if svdpK in spotifyPs and os.path.exists(plistsDir + svdpV['name'] + '.app'):
-            # Add a blank space to the end of the playlist app
-            renamePlaylistApp(oldName=svdpV['name'])
-        elif svdpK not in spotifyPs:
-            # Remove the playlist if it is no longer in Spotify
-            mkrmDir('r', plistsDir + svdpV['name'] + '.app')
-            rmvdItems[1].append(svdpV['name'])
-
-    for spPK, spPV in spotifyPs.items():
-        # TODO: Rename the playlist to the new name if it exists
-        if spPK in savedPs and os.path.exists(plistsDir + savedPs[spPK]['name'] + ' .app'):
-            renamePlaylistApp(oldName=savedPs[spPK]['name'] + ' ', newName=spPV['name'])
-
-        # TODO: MAKE THE APP FOR THE PLAYLIST
-        else:
-            # def mkApp(appDir, appName, code)
-            mkApp(plistsDir, spPV['name'], spPK)
-
-        # TODO: SET THE ICON FOR THE PLAYLIST
-        # def setIcon(setf, imgDict, path, typ, isPNG=False, rmICNS=False)
-
-        if custom_icon:
-            setIcon(plistsDir + spPV['name'] + '.app',
-                    spPV['imgs'], dataDir + spPK, 'pls', rmICNS=True)
-
-            if isUpdate: isUpdate += 1
-            printRe(spPV['name'])
-
-def sysPlaylist(rePlstURI):
+def sysPlaylist(sysPlstId):
     '''
     Every time a playlist app is launched,
     the Spotify web API is called to check if
     it has been renamed or unfollwed by the user,
     and it is renamed or deleted as necessary.
 
-    :param rePlstURI: the URI of the playlist
+    :param sysPlstId: the Id of the playlist
     '''
+    global username, sp, plistsDir
 
-    global pickleDir, username, plistsDir, sp
-    if not os.path.exists(pickleDir): return
+    # TODO: Retrieve saved playlist info
+    rsvdLibrary = UserLibrary.fromPickle()
+    if not rsvdLibrary: return
+    rspLibrary  = UserLibrary(pickleLibrary=rsvdLibrary)
 
-    rPlayists = allUserPlaylists(username)
+    # TODO: Index playlists from Spotify
+    rawPlaylists = spExtend(sp.user_playlists(username))
+    for rawPlst in rawPlaylists:
+        rspLibrary.addPlaylist(rawPlst)
 
-    # TODO: Index Playlists From Spotify
-    rspPlists = {}
-    for rPlist in rPlayists:
-        # DEBUG: Stop At a given playlist
-        # if rPlist['id'] == '01KRdno32jt1vmG7s5pVFg': break
-        indexPlaylist(rspPlists, rPlist)
+    if not sysPlstId in rspLibrary.playlists or \
+    rsvdLibrary.playlists[sysPlstId]['name'] != rspLibrary.playlists[sysPlstId]['name']:
+        rspLibrary.updatePlaylists()
 
-    # TODO: Retrive Pickle With Saved Playlists
-    with open(pickleDir, 'rb') as rePdir:
-           rsvdpickle = pickle.load(rePdir)
-    rsvdPlists = rsvdpickle[3]
-
-    # TODO: If the Playlist Name Has Changed or was Removed from SPotify
-    if not rePlstURI in rspPlists or \
-    rsvdPlists[rePlstURI]['name'] != rspPlists[rePlstURI]['name']:
-
-        updatePlaylists(rsvdPlists, rspPlists)
-
-        if rePlstURI in rspPlists:
+        if sysPlstId in rspLibrary.playlists:
             osaMsg('{} was renamed to {}'.format(
-                printRe(rsvdPlists[rePlstURI]['name'], prnt=False),
-                printRe(rspPlists[rePlstURI]['name'], prnt=False)))
-
+            rePrint(rsvdLibrary.playlists[sysPlstId]['name'], prnt=False),
+            rePrint(rspLibrary.playlists[sysPlstId]['name'], prnt=False)))
         else:
-            osaMsg(printRe(rsvdPlists[rePlstURI]['name'], prnt=False) +
-            ' was removed because it was removed from Spotify')
+            osaMsg(rePrint(rsvdLibrary.playlists[sysPlstId]['name'], prnt=False) +
+                   ' was removed because it was unfollowed')
 
-        rsvdpickle[3] = rspPlists
+        # TODO: Saved updated pickle back to file
+        rspLibrary.dump()
 
-       # TODO: Write Updated Pickle Back to Finder
-        with open(pickleDir, 'wb') as rpd:
-            pickle.dump(rsvdpickle, rpd, protocol=-1)
+    if rspLibrary.playlists[sysPlstId]['num'] == 0:
+        osaMsg('There are no tracks in this playlist')
 
-        # DEBUG: CHECK TO SEE IF PICKLE HAS BEEN UPDATED
-        # with open(pickleDir, 'rb') as debug_rp:
-        #     debug_rsvdPickle = pickle.load(debug_rp)
-        #
-        # debug_rsvdPlists = debug_rsvdPickle[3]
-        #
-        # for fdsa in debug_rsvdPlists:
-        #     del debug_rsvdPlists[fdsa]['imgs']
-        #
-        # pprint.pprint(debug_rsvdPlists)
-
-def sysSong(csongID, iscgPlst):
+def sysSong(csongId, sysAlbId, sysArtId):
     '''
     If a song has been moved to a different playlist,
     then this function attempts to find the playlist
     it was moved to. If the song is no longer in any playlist,
     then it is played in the context of the album it belongs to.
 
-    :param csongID: the URI of the song
-    :param iscgPlst: TODO: ADD LATER
+    :param csongId: the id of the song
+    :param sysAlbId: the album id of the song
+    :param sysArtId: the artist id of the song
     '''
 
-    global pickleDir, username, sp
-    if iscgPlst:
-        osaMsg('The song was moved to a different playlist.\nRetrieving new playlist...')
+    global username, sp
 
-    if not os.path.exists(pickleDir):
-        if iscgPlst:
-            osaMsg('Missing Data. Run the script again to automatically update the playlist.')
+    osaMsg('The song was moved to a different playlist.\nRetrieving new playlist...')
+
+    sysLibrary = UserLibrary.fromPickle()
+    if not sysLibrary:
+        time.sleep(2)
+        osaMsg('Missing Data. Try running the script again.')
         return
 
-    with open(pickleDir, 'rb') as cprr:
-           csvdpickle = pickle.load(cprr)
-    csvdSongs = csvdpickle[0]
-    csvdPlist = csvdSongs[csongID]['plst']
-    csongApp  = os.path.join(csvdSongs[csongID]['sngDir'],
-                            csvdSongs[csongID]['fndrNme']) \
-               + '.app/Contents/MacOS/' + csvdSongs[csongID]['fndrNme']
+    sysSongDict = sysLibrary.library[sysArtId]['albums'][sysAlbId]['tracks'][csongId]
+    prevContext = sysSongDict['context'].split(':')[1]
 
-    # cPlists = sp.user_playlists(username)
-    # cPlistsResults = sp.user_playlists(username)
-    # cPlists = cPlistsResults['items']
+    # prevContext = prevContext.split(':')[1]
 
-    cPlists = allUserPlaylists(username)
-
-    context = None
-
-    for cPlist in cPlists:
-        print(cPlist['name'])
-        if cPlist['id'] == csvdPlist: continue
-        cresults = sp.playlist_tracks(cPlist['uri'])
-        ctracks = cresults['items']
-        while cresults['next']:
-            cresults = sp.next(cresults)
-        ctracks.extend(cresults['items'])
-        for ctrack in ctracks:
-            if ctrack['track']['id'] == csongID:
+    cPlaylists  = spExtend(sp.user_playlists(username))
+    for cPlist in cPlaylists:
+        if cPlist['id'] == prevContext: continue
+        cPlsName = cPlist['name']
+        cPlsId   = cPlist['id']
+        print(cPlsName)
+        cTracks = spExtend(sp.playlist_tracks(cPlsId))
+        for cTrack in (cTrckk['track'] for cTrckk in cTracks):
+            if cTrack['id'] == csongId:
                 # TODO: NEW PLAYLIST FOUND
-                osaMsg('This song was moved to ' + cPlist['name'])
-                context = cPlist['uri']
+                osaMsg(f'{cTrack["name"]} was moved to {cPlsName}')
+                nwContext = f'playlist:{cPlsId}'
                 break
         else: continue
         break
+    else:  # if the song was not found in any playlists
+        nwContext = f'album:{sysAlbId}'
+        osaMsg('Song not found in any playlists.\n'
+               'playing in context of album.')
 
-    csvdSongs[csongID]['plst'] = context
-    plsAlb = ['___chngAlb___', '___chngPlist___']
-    if not context:
-        plsAlb.reverse()
-        context = 'spotify:album:' + csvdSongs[csongID]['albURI']
-        if iscgPlst:
-            osaMsg('Song not found in any playlists.\nPlaying in context of album')
+    os.system(
+        'osascript -e \'tell application "Spotify" to play '
+        'track "spotify:track:{}" in context "spotify:{}"\''
+        .format(csongId, nwContext)
+    )
 
-    if iscgPlst:
-        os.system(
-'osascript -e \'tell application "Spotify" to play track "spotify:track:{}" in context "{}"\''
-                .format(csongID, context))
+    # TODO: edit song app
+    chngSongContext(
+        parentDir=sysSongDict['sngDir'],
+        appName=sysSongDict['fndrNme'],
+        context=nwContext
+    )
+    # TODO: Update context of retrieved pickle and save back to file
+    sysSongDict['context'] = nwContext
+    sysLibrary.dump()
 
-    with open(csongApp) as sa:
-        creSongApp = re.sub('context "(.*)"', 'context "' + context + '"', sa.read())
-        creSongApp = re.sub(plsAlb[0], plsAlb[1], creSongApp)
-
-    with open (csongApp, 'w') as owa:
-        owa.write(creSongApp)
-
-    # csvdpickle[0] = csvdSongs
-    with open(pickleDir, 'wb') as wp:
-        pickle.dump(csvdpickle, wp, protocol=-1)
-
-    # # DEBUG $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-    # print('finished def sysSong')
-
-def setIcon(setf, imgDict, path, typ, isPNG=False, rmICNS=False):
+def sysQueue(songPath):
     '''
-    Sets an icon for a directory (but also works for files)
+    Adds a song to a user's queue
 
-    :param setf: the directory/file to set the icon for
+    :param songPath: the path to a song app
+    '''
+
+    global sp
+    appContents = f'{songPath}/Contents/MacOS/'
+    fullPath = glob.glob(f'{appContents}*')[0]
+    with open(fullPath) as sngQ:
+        uri = re.search('tell application "Spotify" to play track "(.*?)"', sngQ.read())
+    if uri:
+        uri = uri.group(1)
+        devices = sp.devices().get('devices', ())
+        if devices:
+            deviceId = devices[0]['id']
+            sp.add_to_queue(uri, device_id=deviceId)
+
+            # TODO: Get song name
+            qsongName = re.search(f'{appContents}(.*)', fullPath).group(1)
+            osaMsg(f'Added to queue: {qsongName}')
+
+        else:
+            osaMsg('No devices found')
+    else:
+        raise Exception
+
+def setIcon(folder, imgDict=None, imgPath=None, typ=None, isPNG=False):
+    '''
+    Sets an icon for a directory
+
+    :param folder: the directory/file to set the icon for
     :param imgDict:
         a dictonary containing links to imgaes and their heights and widths,
-        or a tuple with a link to an image and the height of the image
-    :param path: The location to save the image that will be used as the icon
+        or a tuple with a link to an image and the height/width of the image,
+        which must be a square or it will be distorted into a square.
+    :param imgPath: The location to save the image that will be used as the icon
     :param typ:
         'alb': album image
         'art': artist image
         'pls': playlist image
         the user can set different preferred sizes for images in each category
     :param isPNG: Is the image a PNG? If not, it is assumed to be JPEG and converted to PNG
-    :param rmICNS: if True: remove the ICNS file that was used to set the icon
-    :returns: True if the icon was successfully applied. Else returns None
+    :returns:
+        True if the icon was applied
+        Else returns None—the icon may have already been applied or data was missing
     '''
 
-    global dimd
-    # print('\n\033[91m#################### -- BEGIN def setICON() -- ####################\033[0m')
-    # print('Dir to set: ' + setf)
+    global dimd, resetPlistImgs
 
-    # If the icon has already been set,
-    # then a `Icon\r` file will be inside the folder.
-    if os.path.exists(setf + '/Icon\r'): return
+    if type(folder)  is tuple: folder  = os.path.join(*folder)
+    if type(imgPath) is tuple: imgPath = os.path.join(*imgPath)
 
-    ICNS = path + '.icns'
+    # If the icon has already been set, then a `Icon\r` file will be inside the folder.
+    if os.path.exists(folder + '/Icon\r') and not (resetPlistImgs and (typ == 'pls')):
+        return
+
+    ICNS = imgPath + '.icns'
     if not os.path.exists(ICNS):
         if not imgDict: return
 
-        # DEBUG: PRINT ICON INFORMATION
-        # print('Type: ' + str(typ))
-        # if typ: print('Preferred Size: ' + str(dimd[typ]))
-        # else: print('Preferred Size: ' + str(imgDict[1]))
+        # print('\n\033[91m#################### -- BEGIN setICON() -- ####################\033[0m')
+        # print(f'Dir to set: {folder}')
+        # print(f'Type: {typ}')
+        # if typ: print(f'Preferred Size: {dimd[typ]}')
+        # else: print(f'Preferred Size: {imgDict[1]}')
 
-        icnset = path + '.iconset/'
-        mkrmDir('o', icnset)
+        icnset = imgPath + '.iconset/'
+        mkrmDir('owrDir', icnset)
 
 
-        if type(imgDict) is tuple:
+        if isPNG:
             # print('Is tuple')
             selectedImg = preferred = imgDict[1]
+            JPG = None
             PNG = icnset + 'icon_{0}x{0}.png'.format(selectedImg)
             with open(PNG, 'wb') as fi:
                 fi.write(requests.get(imgDict[0]).content)
@@ -523,75 +512,103 @@ def setIcon(setf, imgDict, path, typ, isPNG=False, rmICNS=False):
 
             preferred = dimd[typ]
             for gtn, gtsz in enumerate(imgDict):
-                if not gtsz['height']:
+                if not gtsz['width'] or not gtsz['height']:
                     # print('gtsz: ' + str(gtsz))
                     # print('^ No height ^')
-                    with open(path + str(gtn) + '.jpeg', 'wb') as fi:
+                    with open(f'{imgPath}{gtn}.jpeg', 'wb') as fi:
                         fi.write(requests.get(gtsz['url']).content)
-                    gtsz['file']   = path + str(gtn) + '.jpeg'
-                    gtsz['height'] = Image.open(path + str(gtn) + '.jpeg').size[0]
-                    # print("gtsz['height'] = " + str(gtsz['height']))
+                    gtsz['file'] = imgPath + str(gtn) + '.jpeg'
+                    gtsz['width'], gtsz['height'] = Image.open(f'{imgPath}{gtn}.jpeg').size
+                    # print("gtsz['height'] = " + str(gtsz['height']), end='; ')
+                    # print("gtsz['width'] = " + str(gtsz['width']))
                     # print("gtsz['file'] = " + str(gtsz['file']))
 
-
-            imgDict.sort(key=lambda x: (x['height']))
+            imgDict.sort(key=lambda x: min(x['width'], x['height']))
 
             # List of sizes returned from Spotify
-            bsctht = list(avsz['height'] for avsz in imgDict)
-            # print('Available sizes: ' + str(bsctht))
+            bsctht = list(min(avsz['width'], avsz['height']) for avsz in imgDict)
+            # print(f'Available sizes: {bsctht}')
 
             bsct = bisect.bisect_left(bsctht, preferred)
             if bsct == len(imgDict): bsct = -1
 
-            selectedImg = imgDict[bsct]['height']
+            selectedImg = max(imgDict[bsct]['height'], imgDict[bsct]['width'])
             if 'file' in imgDict[bsct]:
                 JPG = imgDict[bsct]['file']
             else:
-                with open(path + '.jpeg', 'wb') as fi:
+                with open(imgPath + '.jpeg', 'wb') as fi:
                     fi.write(requests.get(imgDict[bsct]['url']).content)
-                JPG = path + '.jpeg'
+                JPG = imgDict[bsct]['file'] = imgPath + '.jpeg'
 
-        # print('Downloaded  size: ' + str(selectedImg))
+        # print('size of choosen image:', selectedImg)
 
         dims = [16, 32, 128, 256, 512, 1024]
+        del dims[dims.index(preferred)+1:]
 
-        if selectedImg < preferred:
-            if selectedImg < 128:
-                # print('less than 128')
-                dims = [16, 32, 128]
-            else:
-                dims = dims[:bisect.bisect(dims, selectedImg)]
+        if selectedImg < 128:
+            # print('less than 128')
+            dims = dims[:3]
         else:
-            dims = dims[:dims.index(preferred)+1]
+            dims = dims[:bisect.bisect_left(dims, selectedImg)+1]
 
         dims.reverse()
-        dims.insert(0, dims[0])
+
+        if not isPNG and max(imgDict[bsct]['width'], imgDict[bsct]['height']) != dims[0]:
+            dims.insert(0, dims[0])
+        # else:
+            # print('######## -- IMAGE ALREADY IN ICNS SIZE -- ########')
 
         PNG = icnset + 'icon_{0}x{0}.png'.format(dims[0])
 
-        # print('ICNS sizes: ' + str(dims))
-
         if not isPNG:
             os.system('sips -s format png {} -o {} >/dev/null'.format(JPG, PNG))
+
+        # TODO: Padd non-square images with transparent borders to make them square.
+        # the fileicon command-line utility will distort non-square icons to make them square
+        if not isPNG:
+            width, height = imgDict[bsct]['width'], imgDict[bsct]['height']
+            if width != height:
+                # print('width != height: ', end='')
+                pil_img = Image.open(PNG)
+
+                if width > height:
+                    sqrImg = Image.new('RGBA', (width, width))
+                    sqrImg.paste(pil_img, (0, (width - height) // 2))
+                elif width < height:
+                    sqrImg = Image.new('RGBA', (height, height))
+                    sqrImg.paste(pil_img, ((height - width) // 2, 0))
+
+                sqrImg.save(PNG)
+
+                # # DEBUG: Print resized image dimensions
+                # print(width, height)
+                # print('new dimensions: ', end='')
+                # debug_width, debug_height = Image.open(PNG).size
+                # print(debug_width, debug_height)
+
+
+        # print(f'ICNS sizes: {dims}')
 
         for a, c in enumerate(dims[1:]):
             os.system(
                 'sips -z {1} {1} {0}icon_{2}x{2}.png -o {0}icon_{1}x{1}.png >/dev/null'
                     .format(icnset, c, dims[a]))
 
-        os.system('iconutil -c icns ' + icnset + ' -o ' + ICNS)
+        os.system(f'iconutil -c icns {icnset} -o {ICNS}')
 
+        # TODO: remove Iconset and jpeg files
         shutil.rmtree(icnset)
         if not isPNG:
-            mkrmDir('rf', JPG)
+            mkrmDir('rmFile', JPG)
             for rmfi in imgDict:
                 if 'file' in rmfi:
-                    mkrmDir('rf', rmfi['file'])
+                    mkrmDir('rmFile', rmfi['file'])
 
-    subprocess.run([fileicon_path, 'set', '-q', setf, ICNS])
+    # TODO: Set the Icon
+    subprocess.run([fileicon_path, 'set', '-q', folder, ICNS])
 
-    if rmICNS: mkrmDir('rf', ICNS)
-    # print('\033[91m#################### -- END SET ICON -- ####################\033[0m\n')
+    if typ == 'pls': mkrmDir('rmFile', ICNS)
+    # print('\033[91m#################### -- END setICON() -- ####################\033[0m\n')
     return True
 
 def modded_auth_response(self):
@@ -601,34 +618,40 @@ def modded_auth_response(self):
     console asks for user input, if a URL is pasted, then after the user
     presses enter, the URL is re-opened in the browser intead of being
     passed back into the script. This function uses AppleScript to display
-    a modal dialog in which to paste the URL.
+    a dialog box in which to paste the URL.
+
     :param self: inherits from the SpotifyOAuth class
     '''
 
-    print('\033[95mAuthenticating\n\033[0m')
+    print('\n\033[95mAuthenticating\n\033[0m')
 
     auth_url = self.get_authorize_url()
+
     try:
         import webbrowser
         webbrowser.open(auth_url)
-    except: pass
+    except:
+        pass
 
-    auth_prompt = """User authentication requires interaction with your
-web browser. Once you enter your credentials and
-give authorization, you will be redirected to
-a url.  Paste the url you were directed to to
-complete the authorization.
+    auth_prompt = (
+        'User authentication requires interaction with your web browser. '
+        'Once you enter your credentials and give authorization, '
+        'you will be redirected to a url. '
+        'Paste the url you were directed to to complete the authorization.\n\n'
 
-Opened the following URL in your browser:
+        'Opened the following URL in your browser:\n\n'
 
-{}""".format(auth_url)
+        f'{auth_url}'
+    )
 
-    # TODO: Modded Code
     response = subprocess.run(
-        ['osascript',
-         '-e set x to display dialog "{}" default answer""'.format(auth_prompt),
-         '-e set x to text returned of x'],
-        capture_output=True).stdout.decode('utf-8').strip()
+        [
+             'osascript',
+            f'-e set x to display dialog "{auth_prompt}" default answer""',
+             '-e set x to text returned of x'
+        ],
+        capture_output=True
+    ).stdout.decode('utf-8').strip()
 
     if not response:
         print('Cancelled')
@@ -636,220 +659,440 @@ Opened the following URL in your browser:
 
     return response
 
-spotipy.SpotifyOAuth.get_auth_response = modded_auth_response
+# darwin = macOS
+if sys.platform.startswith('darwin'):
+    spotipy.SpotifyOAuth.get_auth_response = modded_auth_response
 
-###############################################################
+# TODO: $$$$$$$$$$$$$$$ -- CLASS IndexLibrary -- $$$$$$$$$$$$$$$
+class UserLibrary:
+    '''Processes, then stores data retrieved from Spotify in nested dictionaries'''
 
-# TODO: Instantiate Spotify Authentication Manager
-sp = spotipy.Spotify(
-        auth_manager=spotipy.SpotifyOAuth
-	        (client_id, client_secret, redirect_uri,
-		     scope=scope, cache_path=cachePath))
+    def __init__(self, pickleLibrary=None):
+        '''
+        :param pickleLibrary:
+            Data about the user's library
+            from the previous time the script was run
+        '''
 
-###############################################################
-# TODO: $$$$$$$$$$$$$$$ -- SYSTEM ARGUMENTS -- $$$$$$$$$$$$$$$$
-
-if len(sys.argv) > 1:
-    if sys.argv[1].casefold() == 'noicon' or \
-    (sys.argv[1].casefold() == 'no' and sys.argv[2].casefold() == 'icon'):
-        print('\n\033[95mIcons Have Been Disabled\033[0m\n')
-        custom_icon = False
-        if isMain: time.sleep(2)
-
-    elif sys.argv[1] in ('___chngPlist___', '___chngAlb___'):
-        if sys.argv[1] == '___chngPlist___' and \
-        os.system('osascript -e \'tell application "Spotify" to get id of current track\'') != 0:
-            sysSong(sys.argv[2], True)
-
-        elif sys.argv[1] == '___chngAlb___':
-            sysSong(sys.argv[2], False)
-
-        sys.exit()
-
-    elif sys.argv[1] == '___rnPlist___':
-        sysPlaylist(sys.argv[2])
-        sys.exit()
-
-    else:
-        print('\nThis script only accepts one argument: \033[95mnoicon\033[0m'
-        '\nOtherwise, icons will be added\n')
-        if isMain: time.sleep(3)
-
-# TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-# TODO$$$$$$$$$$$$$$$$ -- BEGIN MAIN SCRIPT  -- $$$$$$$$$$$$$$$$$$$$$$
-# TODO$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-# TODO: Retrieve Saved Pickle Data
-if os.path.exists(pickleDir):
-    # Retrieve the Pickle containing data about tracks and playlists
-    # that were previously donwloaded.
-    with open(pickleDir, 'rb') as rpk:
-        svdpickle = pickle.load(rpk)
-    # svd = saved; sp = from Spotify
-    svdSongs  = svdpickle[0]
-    svdAlbums = svdpickle[1]
-    svdArtsts = svdpickle[2]
-    svdPlists = svdpickle[3]
-else:
-    svdSongs, svdPlists, svdAlbums, svdArtsts  = {}, {}, {}, {}
+        self.library   = {}
+        self.playlists = {}
+        if pickleLibrary is not None:
+            self.pickleLibrary = pickleLibrary
 
 
-for f in (folder_location, plistsDir, dataDir, artImgDir, albImgDir):
-    mkrmDir('m', f)
+    @classmethod
+    def fromPickle(cls):
+        '''
+        Returns an instance of IndexLibrary that was saved to a pickle
+        using self.dump
+        '''
 
-if custom_icon:
-    setIcon(folder_location,
-            ('https://i.ibb.co/89MbxQv/Spotify-Folder-Square.png', 1024),
-            dataDir + 'folderIcon', None, isPNG=True)
+        if os.path.exists(pickleDir):
+            with open(pickleDir, 'rb') as rp:
+                svdpickle = pickle.load(rp)
+            return svdpickle
 
-spPlaylists = allUserPlaylists(username)
-
-print('\033[95m################### -- Retrieving Playlist Tracks -- ###################\n\033[0m')
+        return cls()
 
 
-# TODO: $$$$$$$$ -- INDEX PLAYLISTS -- $$$$$$$$
-for spPlaylist in spPlaylists:
+    def dump(self):
+        '''Saves the Spotify data into a pickle file'''
 
-    # DEBUG: Stop at a given playlist
-    # if spPlaylist['id'] == '01KRdno32jt1vmG7s5pVFg': break
+        if not self.library:
+            self.library = self.pickleLibrary.library
 
-    plistID = indexPlaylist(spPlists, spPlaylist)
-    if not plistID: continue
+        with open(pickleDir, 'wb') as pd:
+            pickle.dump(self, pd, protocol=-1)
 
-    ###############################################################
-    # TODO: $$$$$$$$$$$$$$$$ -- RETRIEVE TRACKS -- $$$$$$$$$$$$$$$$
+    def __bool__(self):
+        if self.library and self.playlists:
+            return True
+        return False
 
-    results = sp.playlist_tracks(plistID)
-    
-    tracks  = results['items']
-    tgmr = '' if spPlists[plistID]['num'] == 1 else 's'
-    printRe('\033[95m' + spPlists[plistID]['name'] + ' - '
-          + str(spPlists[plistID]['num']) + ' track' + tgmr + '\033[0m')
+    def add(self, kinds=None, albumKey=None,
+            artId=None, artName=None, artImgs=None,
+            albId=None, albName=None, albImgs=None,
+            sngId=None, sngName=None, context=None):
+        '''
+        Accepts data returned from the Spotify web API, processes it,
+        and then adds it into a nested dictionary.
+        :param context:
+            contains the id of a playlist if the song
+            is in a playlist. Else None.
+        '''
 
-    ptn = 101
+        # DEBUG: $$$$$$$$$$ -- MISSING DATA -- $$$$$$$$$$
 
-    if results['next']: print('     1 - 100')
+        # artName = ''
+        # artId   = None
+        # artImgs = None
 
-    # Spotify only returns 100 tracks per request.
-    while results['next']:
-        results = sp.next(results)
-        tracks.extend(results['items'])
-        # TODO: PRINT TRACK NUMBERS
-        print('  {:>4} - {:<4}'.format(ptn, len(results['items']) + ptn - 1))
-        ptn += 100
-    print()
+        # albId   = None
+        # albName = None
+        # albName = ':'
+        # albImgs = None
 
-    # TODO: $$$$$$$$$$$$$$$$ -- INDEX TRACKS -- $$$$$$$$$$$$$$$$
+        # sngName = ''
 
-    spPlists[plistID]['uniqeTrcks'] = 0
+        if albumKey:
+            artId   = albumKey['artId']   or artId
+            artName = albumKey['artName'] or artName
+            albId   = albumKey['albId']   or albId
+            albName = albumKey['albName'] or albName
 
-    for trckN, track in enumerate(tracks):
-        if track['is_local']: continue
-        songURI    = track['track']['id']
-        if songURI in spSongs: continue
-        songName   = track['track']['name']
-        albumName  = track['track']['album']['name']
-        artistName = track['track']['artists'][0]['name']
-        albumURI   = track['track']['album']['id']
-        artistURI  = track['track']['artists'][0]['id']
+        albumBox = {
+            'artName': artName,
+            'artId'  : artId,
+            'albName': albName,
+            'albId'  : albId
+        }
 
-        # The number of tracks unqique to the given playlist
-        spPlists[plistID]['uniqeTrcks'] += 1
+        if artId: isArtId = True
+        else: isArtId = False; artId = artName or 'blank'
 
-        # macOS does not allow files/folders to include a colon, so they are removed.
-        # Files/folders that start with a period get marked as hidden,
-        # so leading periods are removed.
-        # A shell-escaped `/` becomes a colon, so `/`s are replaced with colons.
-        # For example, if you cd to your desktop and then run `mkdir Some:Folder`,
-        # The name of the folder will be `Some/Folder`.
-        # See http://bit.ly/38FsMhK for more info.
-        for r in ((':', ''), ('/', ':'), ('^\.+', '')):
-            if songName:   songName   = re.sub(r[0], r[1], songName)
-            if albumName:  albumName  = re.sub(r[0], r[1], albumName)
-            if artistName: artistName = re.sub(r[0], r[1], artistName)
+        albId = albId or albName or 'blank'
 
-        # # DEBUG: NO SONG NAME For LIL WINDEX $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-        # if artistURI == '4h76IrYDJITkZC1K9GAVfR':
-        #     songName = ''
+        pcklArts = self.pickleLibrary.library
+        pcklAlbs = pcklArts.get(artId, {}).get('albums', {})
+        pcklSngs = pcklAlbs.get(albId, {}).get('tracks', {})
 
-        ################################################################
-        # finderName = The name that the song will be saved as in Finder
+        if 'artist' in kinds:
+            if not artId in self.library:
 
-        if not albumName: albumName = 'Unknown Album'
+                if artName:
+                    noArtName = False
+                else:
+                    artName = 'Unknown Artist'
+                    noArtName = True
 
-        if songName: isSong = True
-        else: isSong = False; songName = 'Song'
+                if artId in pcklArts:
+                    artName = pcklArts[artId]['name']
+                else:
+                    artNames = [art['name']  for art  in self.library.values()] + \
+                               [part['name'] for part in pcklArts.values()]
 
-        if artistName:
-            isArt = True
-            finderName = songName + ' - ' + artistName
-        else:
-            isArt = False
-            finderName = songName
-            artistName = 'Unknown Artist'
+                    artName = finderFormat(artName, usedNames=artNames, default='Artist')
 
-        # If the song name is blank after being ran through the regexs
-        if not isSong:
-            # If the song has already been downloaded, then it already has a name
-            # and that should be used.
-            if songURI in svdSongs:
-                finderName = svdSongs[songURI]['fndrNme']
-                dirAlbum   = svdSongs[songURI]['sngDir']
-                # print('blank song in saved songs:')
-                # print(svdSongs[songURI]['fndrNme'] + ' = ' + songURI); print()
+                if custom_icon and isArtId:
+                    artInfo = sp.artist(artId)
+                    artImgs = artInfo.get('images')
+
+                self.library[artId] = {
+                    'name': artName, 'noArtName': noArtName,
+                    'imgs': artImgs, 'albums': {}
+                }
+
+        if 'album' in kinds:
+            assert artId in self.library, \
+                "can't add album because associated artist hasn't been added"
+
+            albums = self.library[artId]['albums']
+            if not albId in albums:
+
+                if albId in pcklAlbs:
+                    albName = pcklAlbs[albId]['name']
+                else:
+                    albNames = [alb['name']  for alb  in albums.values()] + \
+                               [palb['name'] for palb in pcklAlbs.values()]
+
+                    albName  = finderFormat(
+                        albName or 'Unknown Album', usedNames=albNames, default='Album'
+                    )
+
+                self.library[artId]['albums'][albId] = {
+                    'name': albName, 'imgs': albImgs, 'tracks': {}
+                }
+
+        if 'track' in kinds:
+            assert albId in self.library.get(artId, {}).get('albums', {}), \
+                "can't add track because associated album and/or artist hasn't been addded"
+
+            songs = self.library[artId]['albums'][albId]['tracks']
+
+            if not sngId in songs:
+
+                sngArtDict = self.library[artId]
+                if sngArtDict['noArtName']:
+                    sngArtist = False
+                else:
+                    sngArtist = sngArtDict['name']
+
+                if context: context = f'playlist:{context}'
+                else: context = f'album:{albId}'
+
+                sngDir = os.path.join(
+                    folder_location, sngArtDict['name'], sngArtDict['albums'][albId]['name']
+                )
+
+                if sngId in pcklSngs:
+                    fndrNme = pcklSngs[sngId]['fndrNme']
+                    sngDir  = pcklSngs[sngId]['sngDir']
+                else:
+
+                    fndrNames = [sng['fndrNme']  for sng  in songs.values()   ] + \
+                                [psng['fndrNme'] for psng in pcklSngs.values()]
+
+                    fndrNme = finderFormat(
+                        sngName, usedNames=fndrNames, default='Song', songArtist=sngArtist
+                    )
+
+                self.library[artId]['albums'][albId]['tracks'][sngId] = {
+                    'fndrNme': fndrNme, 'context': context, 'sngDir': sngDir
+                }
+
+        return albumBox
+
+    def addPlaylist(self, playlist):
+        tTracks = playlist['tracks']['total']
+        plistName = playlist['name']
+        plistID = playlist['id']
+        plistImgDict = playlist.get('images')
+
+
+        plistNames = [pNme['name'] for pNme in self.playlists.values()]
+        plistName = finderFormat(plistName, usedNames=plistNames, default='Playlist')
+
+        self.playlists[plistID] = {
+            'name': plistName, 'imgs': plistImgDict, 'num': tTracks
+        }
+
+        plLenGrmr = '' if tTracks == 1 else 's'
+        rePrint(f'{plistName} - {tTracks} Track{plLenGrmr}')
+        return plistID
+
+    def updatePlaylists(self):
+        '''
+        TODO: UPDATE $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+        Compares playlists from Spotify with downloaded playlists
+        and renames, makes, and sets icons for them as needed
+        '''
+
+        global rmvdItems, custom_icon, updateCount
+
+        spotifyPlists = self.playlists
+        savedPlists   = self.pickleLibrary.playlists
+
+
+        for svdpK, svdpV in savedPlists.items():
+            if svdpK in spotifyPlists and os.path.exists(plistsDir + svdpV['name'] + '.app'):
+                # Add a blank space to the end of the playlist app
+                renamePlaylistApp(oldName=svdpV['name'])
+            elif svdpK not in spotifyPlists:
+                # Remove the playlist if it is no longer in Spotify
+                mkrmDir('rmDir', plistsDir + svdpV['name'] + '.app')
+                rmvdItems['Playlist'].append(svdpV['name'])
+
+        for spPK, spPV in spotifyPlists.items():
+            prntPls = False
+            # TODO: Rename the playlist to the new name if it exists
+            if spPK in savedPlists and os.path.exists(plistsDir + savedPlists[spPK]['name'] + ' .app'):
+                oldName = savedPlists[spPK]['name']
+                newName = spPV['name']
+                renamePlaylistApp(oldName=f'{oldName} ', newName=newName)
+                if oldName != newName:
+                    rePrint(f'{oldName} was renamed to {newName}')
+
+            # TODO: MAKE THE APP FOR THE PLAYLIST
             else:
-                blnkN = 1
-                # spSongs or svdSongs may be empty; so they must be checked to see if they are emtpty
-                # to avoid keyerrors when attempting to access nested elements inside them
-                while (spSongs and finderName in (alSng['fndrNme'] for alSng in spSongs.values())) \
-                or (svdSongs and finderName in (alSvng['fndrNme'] for alSvng in svdSongs.values())):
+                if mkApp(parentDir=plistsDir, appName=spPV['name'], code=spPK):
+                    prntPls = True
 
-                    finderName = 'Song ' + str(blnkN)
-                    if isArt: finderName += ' - ' + artistName
-                    blnkN += 1
+            # TODO: SET THE ICON FOR THE PLAYLIST
+            if custom_icon or resetPlistImgs:
+                if setIcon((plistsDir, spPV['name'] + '.app'),
+                           imgDict=spPV['imgs'], imgPath=(dataDir, spPK), typ='pls'):
+                    prntPls = True
 
-        ################################################################
-        # TODO $$$$$$$$$$$$$$ -- Artist and Album Data -- $$$$$$$$$$$$$$
+            if prntPls:
+                updateCount += 1
+                rePrint(spPV['name'])
 
-        dirArtist = os.path.join(folder_location, artistName)
-        mkrmDir('m', dirArtist)
-
-        if artistURI and not artistURI in spArtists:
-            artistImgDict = None
-            if custom_icon:
-                artistInfo = sp.artist(artistURI)
-                if 'images' in artistInfo and artistInfo['images']:
-                    artistImgDict = artistInfo['images']
-
-            spArtists[artistURI] = \
-        {'name': artistName, 'dir': dirArtist, 'imgs': artistImgDict}
+    # def playlistName(self, cntxt):
+    # 	'''Returns the name of a playlist given "playlist:{id}" or None if not found'''
+    # 	return self.playlists.get(cntxt.split(':')[1], {}).get('name')
 
 
-        dirAlbum = os.path.join(dirArtist, albumName)
-        mkrmDir('m', dirAlbum)
+################################################################
+# TODO: $$$ -- Instantiate Spotify Authentication Manager -- $$$
 
-        if albumURI and not albumURI in spAlbums:
-            albumImgDict = None
-            if custom_icon:
-                isAlbImg = track['track']['album']
+sp = spotipy.Spotify(
+    auth_manager=spotipy.SpotifyOAuth(
+        client_id, client_secret, redirect_url,
+        scope=scope, cache_path=cachePath,
+        username=username, show_dialog=True))
 
-                # # DEBUG: Missing Album Image
-                # isAlbImg = []
+################################################################
+# TODO: $$$$$$$$$$$$$$$$ -- SYSTEM ARGUMENTS -- $$$$$$$$$$$$$$$$
 
-                if 'images' in isAlbImg and isAlbImg['images']:
-                    albumImgDict = isAlbImg['images']
+if True:
+    sysDelay = False
+    resetPlistImgs = False
 
-            spAlbums[albumURI] = \
-        {'name': albumName, 'dir': dirAlbum, 'imgs': albumImgDict, 'artURI': artistURI}
+    if len(sys.argv) > 1:
 
-        ################################################################
-        # TODO: $$$$$$$$$$$$$$$ -- APPEND TRACK DATA -- $$$$$$$$$$$$$$$$
+        if any(s.casefold().startswith('noicon') for s in sys.argv):
+            sysDelay = True
+            # print('\033[95mIcons Have Been Disabled\033[0m\n')
+            custom_icon = False
+            # if isMain: time.sleep(2)
 
-        spSongs[songURI] = \
-        {'fndrNme': finderName, 'sngDir': dirAlbum,
-          'albURI': albumURI,   'artURI': artistURI, 'plst': plistID}
+        if any(s.casefold().startswith('playlist') for s in sys.argv):
+            sysDelay = True
+            resetPlistImgs = True
 
-        ################################################################
+    if not custom_icon:
+        sysDelay = True
+        print('\033[95mIcons Have Been Disabled\033[0m\n')
+
+    # TODO: Check if fileicon is installed
+    if os.path.exists(fileicon_path):
+        fileIconExists = True
+        dimd = {'alb': 256, 'art': 256, 'pls': 256}
+        for dx in (('alb', album_image_size), ('art', artist_image_size), ('pls', playlist_image_size)):
+            if dx[1] in (1024, 512, 256, 128):
+                dimd[dx[0]] = dx[1]
+    else:
+        fileIconExists = False
+        if custom_icon:
+            custom_icon = False
+            sysDelay = True
+            print(f'Icons have been disabled because\n{fileicon_path}\nwas not found\n')
+            # if isMain: time.sleep(3)
+
+    if resetPlistImgs:
+        sysDelay = True
+        if fileIconExists:
+            print('\033[95mPlaylist images will be reset\033[0m\n')
+        else:
+            print("Can't reset playlist images because fileicon was not found")
+            resetPlistImgs = False
+
+    if len(sys.argv) > 1:
+
+        if sys.argv[1] == '___chngPlist___':
+            if os.system(
+                'osascript -e \'tell application "Spotify" to get id of current track\''
+            ) != 0:
+                sysSong(*sys.argv[2:])
+            sys.exit()
+
+        elif sys.argv[1] == '___rnPlist___':
+            sysPlaylist(sys.argv[2])
+            sys.exit()
+
+        elif sys.argv[1] == '___queue___':
+            sysQueue(sys.argv[2])
+            sys.exit()
+
+
+    # DEBUG: $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+    # print(f'\ncustom_icon = {custom_icon}')
+    # print(f'resetPlistImgs = {resetPlistImgs}\n')
+
+    if isMain and sysDelay: time.sleep(2)
+
+################################################################
+
+# TODO: $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+# TODO: $$$$$$$$$$$$$$$$ -- BEGIN MAIN SCRIPT  -- $$$$$$$$$$$$$$
+# TODO: $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+
+for mkfolder in (folder_location, dataDir, plistsDir, artImgDir, albImgDir):
+    mkrmDir('mkDir', mkfolder)
+
+# TODO: Set the icon for the folder that contains all the songs
+if custom_icon:
+    setIcon(
+        folder_location, isPNG=True,
+        imgDict=('https://i.ibb.co/89MbxQv/Spotify-Folder-Square.png', 1024),
+        imgPath=(dataDir, 'Folder_Icon')
+    )
+
+# TODO: Instantiate IndexLibrary objects
+svdLibrary = UserLibrary.fromPickle()
+spLibrary  = UserLibrary(pickleLibrary=svdLibrary)
+
+################################################################
+
+print('\033[95m################### -- Retrieving Saved Playlists -- ###################\033[0m')
+playlists = spExtend(sp.user_playlists(username))
+plistLen = len(playlists)
+
+TimeStamp = time.time()
+
+if plistLen == 0:
+    print('No Saved Playlists\n')
+else:
+    print(f'Found {plistLen} Playlist{"" if plistLen == 1 else "s"}\n')
+
+    for playlist in playlists:
+
+        plistID = spLibrary.addPlaylist(playlist)
+        if not plistID: continue
+
+        # TODO: Get all playlist tracks
+        playlistTracks = spExtend(sp.playlist_tracks(plistID))
+
+        for plTrack in playlistTracks:
+            if plTrack['is_local']: continue
+            plTrack = plTrack['track']
+
+            # TODO: Get playlist track data
+            spLibrary.add(
+                kinds   = ('artist', 'album', 'track'),
+                artId   = plTrack.get('artists', [{}])[0].get('id'),
+                artName = plTrack.get('artists', [{}])[0].get('name'),
+                albId   = plTrack.get('album', {}).get('id'),
+                albName = plTrack.get('album', {}).get('name'),
+                albImgs = plTrack.get('album', {}).get('images'),
+                sngId   = plTrack.get('id'),
+                sngName = plTrack.get('name'),
+                context = plistID
+            )
+
+
+################################################################
+
+print('\033[95m################### -- Retrieving Saved Albums -- ###################\033[0m')
+
+userAlbums = spExtend(sp.current_user_saved_albums(limit=50))
+
+userAlbLen = len(userAlbums)
+
+if userAlbLen == 0:
+    print('No Saved Albums\n')
+else:
+    print(f'Found {userAlbLen} album{"" if userAlbLen == 1 else "s"}\n')
+
+    for album in (albb['album'] for albb in userAlbums):
+
+        artistName = album.get('artists', [{}])[0].get('name')
+        albumName  = album.get('name')
+        albumLen   = album.get('total_tracks')
+        print('{} - {} ({} Track{})'
+                .format(albumName, artistName, albumLen, '' if albumLen == 1 else 's'))
+
+        albumKey = spLibrary.add(
+            kinds   = ('artist', 'album'),
+            artId   = album.get('artists', [{}])[0].get('id'),
+            artName = artistName,
+            albId   = album.get('id'),
+            albName = albumName,
+            albImgs = album.get('images'),
+        )
+
+        # TODO: Get all album tracks
+        albTracks = spExtend(album['tracks'])
+
+        # TODO: Get Track Data
+        for albTrack in albTracks:
+            if albTrack['is_local']: continue
+            spLibrary.add(
+                kinds    = ('track',),
+                albumKey = albumKey,
+                sngId    = albTrack.get('id'),
+                sngName  = albTrack.get('name')
+            )
 
 ################################################################
 
@@ -857,191 +1100,196 @@ for spPlaylist in spPlaylists:
 # TODO: $$$$$$$$$$ -- RENAME OR DELETE SAVED ITEMS -- $$$$$$$$$$
 # TODO: $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
+for artK, artV in svdLibrary.library.items():
 
-# TODO: DELETE SAVED ITEMS NO LONGER ON SPOTIFY
-for sngK, sngV in svdSongs.items():
-    # If a saved song is no longer in any Spotify playlist
-    if not sngK in spSongs:
-        rmvdItems[0].append(sngV['fndrNme'])
-        # Delete the song itself
-        mkrmDir('r', os.path.join(sngV['sngDir'], sngV['fndrNme']) + '.app')
+    # TODO: If the artist is no longer in the user's library
+    artPath = (folder_location, artV['name'])
+    if not artK in spLibrary.library:
+        # Maintains dictionary of removed items
+        rmvdItems['Artist'].append(artV['name'])
+        # Delete the artist folder
+        mkrmDir('rmDir', artPath)
+        # Delete the artist image
+        mkrmDir('rmFile', (artImgDir, f'{artK}.icns'))
+        # Delete all album images for the artist
+        for rmArtAlb in artV['albums']:
+            mkrmDir('rmFile', (albImgDir, f'{rmArtAlb}.icns'))
 
-        rmAlb = sngV['albURI']
-        if rmAlb and not rmAlb in spAlbums:
-            # Delete the album image
-            mkrmDir('rf', albImgDir + rmAlb + '.icns')
-            # Delete the album folder
-            if svdAlbums:
-                mkrmDir('r', svdAlbums[rmAlb]['dir'])
+    else:
+
+        allArtAlbs = spLibrary.library[artK]['albums']
+        for artAlbK, artAlbV in artV['albums'].items():
+
+            # TODO: If the album is no longer in the user's library
+            albPath = (*artPath, artAlbV['name'])
+            if not artAlbK in allArtAlbs:
+
+                rmvdItems['Album'].append(artAlbV['name'])
+                # Delete the album folder
+                mkrmDir('rmDir', albPath)
+                # Delete the album image
+                mkrmDir('rmFile', (albImgDir, f'{artAlbK}.icns'))
+
+            else:
+
+                allArtAlbSngs = allArtAlbs[artAlbK]['tracks']
+                for artAlbSngK, artAlbSngV in artAlbV['tracks'].items():
+
+                    # TODO: If the song is no longer in the user's library
+                    if not artAlbSngK in allArtAlbSngs:
+                        rmvdItems['Song'].append(artAlbSngV['fndrNme'])
+                        # Delete the song
+                        mkrmDir('rmDir', (*albPath, artAlbSngV['fndrNme'] + '.app'))
 
 
-        rmArt = sngV['artURI']
-        if rmArt and not rmArt in spArtists:
-            # Delete the artist image
-            mkrmDir('rf', artImgDir + rmArt + '.icns')
-            # Delete the artist folder
-            if svdArtsts:
-                mkrmDir('r', svdArtsts[rmArt]['dir'])
+                    # TODO: If the song was moved to a different playlist or to an album, then update the app
+                    else:
+                        oldContext = artAlbSngV['context']
+                        newContext = allArtAlbSngs[artAlbSngK]['context']
+                        # if allArtAlbSngs[artAlbSngK]['context'] != artAlbSngV['context']:
+                        if newContext != oldContext:
+                            chngSongContext(
+                                parentDir=albPath,
+                                appName=artAlbSngV['fndrNme'],
+                                context=newContext
+                            )
 
 
-    # TODO: If the song was moved to a different playlist, then update the app
-    elif sngV['plst'] != spSongs[sngK]['plst']:
-        swtchPlist = os.path.join(sngV['sngDir'], sngV['fndrNme']) \
-                     + '.app/Contents/MacOS/' + sngV['fndrNme']
+                        # TODO: Get the name of the playist/album the song was in
+                        #  and for where it was moved to
+                        # oldContextName = svdLibrary.playlistName(oldContext) or artAlbV['name']
+                        # newContextName = spLibrary.playlistName(newContext) or allArtAlbs[artAlbK]['name']
+                        # rePrint('\033[1m{}\033[0m was moved from \033[1m{}\033[0m to \033[1m{}\033[0m\n'
+                        # 	  .format(artAlbSngV["fndrNme"], oldContextName, newContextName))
 
-        if os.path.exists(swtchPlist):
-            with open(swtchPlist) as rpf:
-                newPlist = re.sub('context "(.*)"',
-                    'context "spotify:playlist:' + spSongs[sngK]['plst'] + '"', rpf.read())
-
-            with open(swtchPlist, 'w') as owf:
-                owf.write(newPlist)
-
-if spPlists:
-    mkPlMsg = 'Downloading Playlists'
-    if custom_icon: mkPlMsg += ' and Setting Icons'
-    print('\033[95m################### -- ' + mkPlMsg + ' -- ###################\033[0m\n')
 
 # TODO: RENAME, DELETE, OR MAKE PLAYLISTS
-updatePlaylists(svdPlists, spPlists, isUpdate=updCnt)
+if spLibrary.playlists:
+    mkPlMsg = 'Downloading Playlists'
+    if custom_icon: mkPlMsg += ' and Setting Icons'
+    print(f'\033[95m################### -- {mkPlMsg} -- ###################\033[0m\n')
+    plsLen = len(spLibrary.playlists)
+    print(f'{plsLen} playlist{"" if plsLen == 1 else "s"}\n')
+
+spLibrary.updatePlaylists()
+
 
 # TODO: $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 # TODO: $$$$$$$$$$$$ -- MAKE APPS AND SET ICONS -- $$$$$$$$$$$$$
 # TODO: $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-if spSongs:
+if spLibrary.library:
     mkSngMsg = 'Downloading Songs'
     if custom_icon: mkSngMsg += ' and Setting Icons'
-    print('\n\033[95m################### -- ' + mkSngMsg + ' -- ###################\033[0m')
+    artLen = len(spLibrary.library)
+    # mkSngMsg += f' ({artLen} artist{"" if artLen == 1 else "s"})'
+    print(f'\n\033[95m################### -- {mkSngMsg} -- ###################\033[0m')
+    print(f'\n{artLen} artist{"" if artLen == 1 else "s"}')
+
 else:
     print("You Don't have any songs on Spotify!")
 
-plst, sngN = None, 0
-for songK, songV in spSongs.items():
-    if songV['plst'] != plst:  # Then a new playlist has been reached
-        sngN = 0
-        plst = songV['plst']
-        ggrmr = '' if spPlists[plst]['num'] == 1 else 's'
+for spArtK, spArtV in spLibrary.library.items():
 
-        printRe('\n\033[95m{} - {} unique track{}\033[0m'
-              .format(spPlists[plst]['name'], str(spPlists[plst]['uniqeTrcks']), ggrmr))
+    # Print the artist name
+    albLen = len(spArtV['albums'])
+    rePrint(f'\n\033[95m{spArtV["name"]} ({albLen} album{"" if albLen == 1 else "s"})\033[0m')
 
-        if spPlists[plst]['uniqeTrcks'] <= 100: print()
 
-    chunkPrint(sngN, spPlists[plst]['uniqeTrcks'])
-    sngN += 1
+    # Make the artist folder
+    artFolder = os.path.join(folder_location, spArtV['name'])
+    mkrmDir('mkDir', artFolder)
+
+    # Set artist icon
+    if custom_icon:
+        if setIcon(artFolder, imgDict=spArtV['imgs'],
+                imgPath=(artImgDir, spArtK), typ='art'):
+            updateCount += 1
 
     ################################################################
+    # TODO: For each of an artist's albums
+    for albK, albV in spArtV['albums'].items():
 
-    # Only print the song name and increment the update count once
-    isPrntSng = False
+        # Print the album name
+        trkLen = len(albV['tracks'])
+        # rePrint('\t' + albV['name'] + f' ({trkLen} tracks{"" if trkLen == 1 else "s"})')
+        rePrint(f'\n\t\033[95m{albV["name"]} ({trkLen} track{"" if trkLen == 1 else "s"})\033[0m')
 
-    # TODO: MAKE THE APP FOR THE SONG
-    if mkApp(songV['sngDir'], songV['fndrNme'], (songK, plst)):
-        printRe(songV['fndrNme'])
-        updCnt += 1; isPrntSng = True
+        # Make the album folder
+        albFolder = os.path.join(artFolder, albV['name'])
+        mkrmDir('mkDir', albFolder)
 
+        # Set the album icon if it is not already set
+        if custom_icon and not os.path.exists(albFolder + '/Icon\r'):
 
-    # TODO: SET THE ICON FOR THE SONG
-    songPath = os.path.join(songV['sngDir'], songV['fndrNme']) + '.app'
-    # If the icon has not already been set
-    if custom_icon and not os.path.exists(songPath + '/Icon\r'):
-        isSngIconSet = False
-        sngAlbURI = songV['albURI']
-        sngArtURI = songV['artURI']
+            # Try to use album image
+            isAlbIconSet = setIcon(albFolder, imgDict=albV['imgs'],
+                                   imgPath=(albImgDir, albK), typ='alb')
 
-        # Try to use the album image to set the icon for the song
-        if sngAlbURI:
-            isSngIconSet = setIcon(
-                songPath, spAlbums[sngAlbURI]['imgs'], albImgDir + sngAlbURI, 'alb')
-          # setIcon(dir to set, imgs, path to save imgs, type)
+            # Else try to use the artist image
+            if not isAlbIconSet:
+                isAlbIconSet = setIcon(albFolder, imgDict=spArtV['imgs'],
+                imgPath=(artImgDir, spArtK), typ='alb')
 
-        # Elif try to use the artist image to set the icon for the song
-        if not isSngIconSet and sngArtURI:
-            isSngIconSet = setIcon(
-                songPath, spArtists[sngArtURI]['imgs'], artImgDir + sngArtURI, 'art')
+            if isAlbIconSet: updateCount += 1
 
-        if isSngIconSet and not isPrntSng:
-            printRe(songV['fndrNme'])
-            updCnt += 1
-
-
-################################################################
-
-if custom_icon:
-
-    # TODO: SET ARTIST ICONS
-    if spArtists:
-        artLen = len(spArtists)
-        print('\n\033[95mApplying Artist Icons ({})\033[0m'.format(artLen))
-        if artLen <= 100: print()
-
-        for n, (artK, artV) in enumerate(spArtists.items()):
-
-            chunkPrint(n, artLen)
-
-            if setIcon(artV['dir'], artV['imgs'], artImgDir + artK, 'art'):
-                printRe(artV['name'])
-                updCnt += 1
+        # If the artist image doesn't exist, try to use the album image for the artist
+        if custom_icon and not os.path.exists(artFolder + '/Icon\r'):
+            if setIcon(artFolder, imgDict=albV['imgs'],
+                       imgPath=(albImgDir, albK), typ='alb'):
+                updateCount += 1
 
 
-    # TODO: SET ALBUM ICONS
-    if spAlbums:
-        albLen = len(spAlbums)
-        print('\n\033[95mApplying Album Icons ({})\033[0m'.format(albLen))
-        if albLen <= 100: print()
+        ################################################################
+        # TODO: For each of an album's tracks
+        for sngK, sngV in albV['tracks'].items():
 
-        for n, (albK, albV) in enumerate(spAlbums.items()):
+            # TODO: Make the song app
+            prntSng = False
+            # mkApp returns True if the app was made, else None
+            if mkApp(parentDir=albFolder, appName=sngV['fndrNme'],
+                  code=(sngK, sngV['context'], albK, spArtK)):
+                # code=(songId, context, albumId, artistId)
+                prntSng = True
 
-            chunkPrint(n, albLen)
+            # set song Icon
+            songApp = os.path.join(albFolder, sngV['fndrNme']) + '.app'
+            if custom_icon and not os.path.exists(songApp + '/Icon\r'):
+                # Try to use album img, then artist img
+                # setIcon returns None if the icon was not set and True if it was
+                if setIcon(songApp, imgPath=(albImgDir, albK)):
+                    prntSng = True
+                elif setIcon(songApp, imgPath=(artImgDir, spArtK)):
+                    prntSng = True
 
-            if os.path.exists(albV['dir'] + '/Icon\r'): continue
+            # Print the song name only if it has been newly downloaded
+            # or its icon has been newly set
+            if prntSng:
+                rePrint('\t\t' + sngV['fndrNme'])
+                updateCount += 1
 
-            setAlbPath = None
 
-            if os.path.exists(albImgDir + albK + '.icns'):
-                setAlbPath  = albImgDir + albK
+# TODO: $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+# TODO: $$$$$$$$$$$$$$$$$ -- END MAIN SCRIPT  -- $$$$$$$$$$$$$$$
+# TODO: $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-            elif os.path.exists(artImgDir + albV['artURI'] + '.icns'):
-                setAlbPath    = artImgDir + albV['artURI']
+spLibrary.dump()
 
-            if setAlbPath:
-                if setIcon(albV['dir'], None, setAlbPath, None):
-                        printRe(albV['name'])
-                        updCnt += 1
-
-# TODO: $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-# TODO: $$$$$$$$$$$$$$$$$ -- END MAIN SCRIPT  -- $$$$$$$$$$$$$$$$$$$$$$$
-# TODO: $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-# TODO: SAVE PICKLE TO FILE
-with open(pickleDir, 'wb') as pd:
-    pickle.dump([spSongs, spAlbums, spArtists, spPlists], pd, protocol=-1)
-
-# TODO: PRINT REMOVED ITEMS
-# rmvdItems = ([removed songs], [removed playlists])
-if rmvdItems[0] or rmvdItems[1]:
-    rmvdiLen = len(rmvdItems[0] + rmvdItems[1])
-    gRmS = ' Item Was' if rmvdiLen == 1 else ' Items Were'
+# Print removed items
+rmvdLen = (sum(len(rr) for rr in rmvdItems.values()))
+if rmvdLen > 0:
     print('\n\033[91m################### -- {}{} Removed -- ###################\033[0m'
-          .format(str(rmvdiLen), gRmS))
+          .format(rmvdLen, ' Item Was' if rmvdLen == 1 else ' Items Were'))
 
-    if rmvdItems[0]:
-        rmpg = ' Was' if len(rmvdItems[0]) == 1 else 's Were'
-        # print('\n\033[95m' + str(len(rmvdItems[0])) + ' Song' + rmpg + ' Removed\033[0m\n')
-        print('\n\033[95m{} Song{} Removed\033[0m\n'
-            .format(str(len(rmvdItems[0])), rmpg))
+    for rmK, rmV in rmvdItems.items():
+        leni = len(rmV)
+        if leni:
+            print('\n\033[91m{} {}{} Removed\033[0m\n'
+                  .format(leni, rmK, ' Was' if leni == 1 else 's Were'))
+            for rmvdi in rmV:
+                rePrint(rmvdi)
 
-        for rmvdSong in rmvdItems[0]:
-            printRe(rmvdSong)
-
-    if rmvdItems[1]:
-        rmsg = ' Was' if len(rmvdItems[1]) == 1 else 's Were'
-        # print('\n\033[95m' + str(len(rmvdItems[1])) + ' Playlist' + rmsg + ' Removed\033[0m\n')
-        print('\n\033[95m{} Playlist{} Removed\033[0m\n'
-            .format(str(len(rmvdItems[1])), rmsg))
-        for rmvdPlist in rmvdItems[1]:
-            printRe(rmvdPlist)
+print('\n\n###############################################################\n')
 
 def formatTime(s):
     '''
@@ -1049,40 +1297,41 @@ def formatTime(s):
     and returns a length of time in human-readable format with correct grammar.
     '''
 
-    if s == 0: return 'less than one second'
+    if s < 0.01: return 'less than one second'
     tList = []
 
     hours = s // 3600
     if hours != 0:
-        strhours = '1 Hour' if hours == 1 else str(hours) + ' hours'
+        strhours = '1 Hour' if hours == 1 else f'{int(hours)} hours'
         tList.append(strhours)
 
     s = s - hours * 3600
     minutes = s // 60
     if minutes != 0:
-        strminutes = '1 Minute' if minutes == 1 else str(minutes) + ' minutes'
+        strminutes = '1 Minute' if minutes == 1 else f'{int(minutes)} minutes'
         tList.append(strminutes)
 
     s = s - minutes * 60
     if s != 0:
-        strseconds = '1 Second' if s == 1 else str(s) + ' seconds'
+        strseconds = '1 Second' if s == 1 else f'{round(s, 2)} seconds'
         tList.append(strseconds)
 
     if len(tList) == 1: return tList[0]
-    if len(tList) == 2: return tList[0] + ' and ' + tList[1]
-    return tList[0] + ', ' + tList[1] + ', and ' + tList[2]
+    if len(tList) == 2: return f'{tList[0]} and {tList[1]}'
+    return f'{tList[0]}, {tList[1]}, and {tList[2]}'
 
-if updCnt:
-    elapsed  = int(time.time()) - TimeStamp
+if updateCount:
+    elapsed  = time.time() - TimeStamp
     elapsedH = formatTime(elapsed)
-    perItem  = formatTime(round(elapsed/updCnt, 2))
-    fGrmr    = '' if updCnt == 1 else 's'
-    finalMsg = 'It took {} to Update {} Item{}'.format(elapsedH, str(updCnt), fGrmr)
-    print('\033[95m\n#----------------------------------------------------------------#\033[0m')
+    perItem  = formatTime(elapsed/updateCount)
+    fGrmr    = '' if updateCount == 1 else 's'
+    finalMsg = f'It took {elapsedH} to Update {updateCount} Item{fGrmr}'
+    # print('\033[95m\n#----------------------------------------------------------------#\033[0m')
     print(finalMsg)
-    if updCnt > 1: print(perItem.capitalize() + ' per Item\033[0m\n')
+    if updateCount > 1: print(f'{perItem.capitalize()} per Item\033[0m\n')
 
     osaMsg(finalMsg, titl='Indexing Finished')
 else:
-    print('\n\033[91mNo New Songs or Icons to Apply\n\033[0m')
-    osaMsg('No New Songs or Icons to Apply')
+    finalMsg = 'No New Songs or Icons to Apply'
+    print(f'\n\033[91m{finalMsg}\n\033[0m')
+    osaMsg(finalMsg)

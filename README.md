@@ -4,7 +4,7 @@
 
 <a href="https://ibb.co/tBQWfCt"><img src="https://i.ibb.co/b1Q8hdZ/Spotlight-Bright5.gif" alt="Spotlight-Bright5" border="100"></a>
 
-**This script will retrieve all the songs in ALL of your Spotify playlists. For each song, it will make an application named after the song, which you can click to play the song in Spotify. It will also make an application for each of your playlists.**
+**This script will retrieve all the songs in ALL of your Spotify playlists and saved albums. For each song, it will make an application named after the song, which you can click to play the song in Spotify. It will also make an application for each of your playlists.**
 
 Song will be played in the context of the playlist they belong to.
 
@@ -96,8 +96,7 @@ playlist_image_size = 512
 
 # This is where your access token is stored.
 # Only change this if you need to.
-cachePath = os.path.join(str(Path.home()), 'sp/.cache_{}_{}'.format(username, scope))
-# cachePath = os.path.join(str(Path.home()), '.cache_{}_{}'.format(username, scope))
+cachePath = os.path.join(Path.home(), '.cache_{}_{}'.format(username, scope))
 
 ###############################################################
 ###############################################################
@@ -116,7 +115,14 @@ Paste the URL of this page into the dialog box and press enter. After that, the 
 
 # How to Use
 
-This script accepts one command line argument: `noicon`, which will disable the setting of custom icons. If you don't care about the icons, then use this because the script will run several orders of magnitude faster. If you run the script once using the `noicon` argument, you can then run it again without the `noicon` argument and all the icons will be applied to your songs! This included pre-downloaded songs and any songs you have added to any of your playlists since running the script the first time. 
+This script accepts two command line arguments: 
+
+ - `noicon` disable the setting of custom icons. If you don't care about the icons, then use this because the script will run several orders of magnitude faster. If you run the script once using the `noicon` argument, you can then run it again without the `noicon` argument and all the icons will be applied to your songs! This included pre-downloaded songs and any songs you have added to any of your playlists since running the script the first time.
+ 
+ - `playlist` re-download all playlist images. This is useful if you have changed the image for one of your playlists.
+ 
+These are positional arguments that can be used in any order.
+ 
 
 After adding new songs to an existing playlist and/or creating and/or following new playlists you can re-run the script and only the new songs will be downloaded!
 

@@ -53,8 +53,6 @@ http://localhost:8080
 ```
 as the Redirect URI. Make sure to save your changes at the bottom.
 
-<a href="https://ibb.co/zFmhVjh"><img src="https://i.ibb.co/KD5jxRj/Screen-Shot-2020-01-02-at-13-28-20.png" alt="Screen-Shot-2020-01-02-at-13-28-20" border="0"></a>
-
 Save your client id and client secret into a text file with the following format
 ```
 client id = abcabcabcabcabcabcabcabcabcabcab

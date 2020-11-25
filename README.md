@@ -49,7 +49,7 @@ Enter any name or description and below `What are you building`, select `I don't
 
 and set 
 ```
-http://localhost/
+http://localhost:8080
 ```
 as the Redirect URI. Make sure to save your changes at the bottom.
 

@@ -100,7 +100,7 @@ else:
     sys.exit()
 
 # TODO: Constants
-redirect_url = 'http://localhost/'
+redirect_url = 'http://localhost:8080'
 updateCount = 0
 fullScriptPath = f'{sys.executable} "{sys.argv[0]}"'
 rmvdItems = {'Artist': [], 'Album': [], 'Song': [], 'Playlist': []}
@@ -636,60 +636,6 @@ def setIcon(folder, imgDict=None, imgPath=None, typ=None, isPNG=False):
     if typ == 'pls': mkrmDir('rmFile', ICNS)
     # print('\033[91m#################### -- END setICON() -- ####################\033[0m\n')
     return True
-
-
-def modded_auth_response(self):
-    """
-    Overrides Spotipy's get_auth_response because
-    of the following bug in PyCharm: When a script run from the Pycharm
-    console asks for user input, if a URL is pasted, then after the user
-    presses enter, the URL is re-opened in the browser intead of being
-    passed back into the script. This function uses AppleScript to display
-    a dialog box in which to paste the URL.
-
-    :param self: inherits from the SpotifyOAuth class
-    """
-
-    print('\n\033[95mAuthenticating\n\033[0m')
-
-    auth_url = self.get_authorize_url()
-
-    try:
-        import webbrowser
-        webbrowser.open(auth_url)
-    except:
-        pass
-
-    auth_prompt = (
-        'User authentication requires interaction with your web browser. '
-        'Once you enter your credentials and give authorization, '
-        'you will be redirected to a url. '
-        'Paste the url you were directed to to complete the authorization.\n\n'
-
-        'Opened the following URL in your browser:\n\n'
-
-        f'{auth_url}'
-    )
-
-    response = subprocess.run(
-        [
-            'osascript',
-            f'-e set x to display dialog "{auth_prompt}" default answer""',
-            '-e set x to text returned of x'
-        ],
-        capture_output=True
-    ).stdout.decode('utf-8').strip()
-
-    if not response:
-        print('Cancelled')
-        sys.exit()
-
-    return response
-
-
-if sys.platform.startswith('darwin'):
-    spotipy.SpotifyOAuth.get_auth_response = modded_auth_response
-
 
 class SpotifyLibrary:
     """Processes, then stores data retrieved from Spotify in nested dictionaries"""
